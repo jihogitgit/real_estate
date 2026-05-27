@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import LoginButton from '@/components/auth/LoginButton'
 
 const NAV_LINKS = [
   { href: '/apply', label: '분양정보' },
@@ -26,13 +27,16 @@ export default function Header() {
             </Link>
           ))}
         </nav>
-        <nav className="flex md:hidden items-center gap-4 text-xs font-medium">
-          {NAV_LINKS.slice(0, 3).map(({ href, label }) => (
-            <Link key={href} href={href} className="text-gray-700">
-              {label}
-            </Link>
-          ))}
-        </nav>
+        <div className="flex items-center gap-2">
+          <nav className="flex md:hidden items-center gap-3 text-xs font-medium">
+            {NAV_LINKS.slice(0, 2).map(({ href, label }) => (
+              <Link key={href} href={href} className="text-gray-700">
+                {label}
+              </Link>
+            ))}
+          </nav>
+          <LoginButton />
+        </div>
       </div>
     </header>
   )

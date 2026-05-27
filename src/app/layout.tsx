@@ -4,6 +4,7 @@ import Script from 'next/script'
 import './globals.css'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
+import { AuthProvider } from '@/components/auth/AuthProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
     template: '%s | 청약마당',
   },
   description: '전국 분양 청약 일정, 가점 계산기, 지역별 청약 정보를 한눈에 확인하세요.',
-  metadataBase: new URL('https://your-domain.vercel.app'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://your-domain.vercel.app'),
   openGraph: {
     type: 'website',
     locale: 'ko_KR',
@@ -37,9 +38,11 @@ export default function RootLayout({
           src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_KEY}&autoload=false`}
           strategy="beforeInteractive"
         />
-        <Header />
-        <main className="min-h-screen">{children}</main>
-        <Footer />
+        <AuthProvider>
+          <Header />
+          <main className="min-h-screen">{children}</main>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   )
