@@ -1,11 +1,17 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import type { Metadata } from 'next'
 import { getApartmentById } from '@/lib/apartments'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { Apartment } from '@/types'
+
+const KakaoMapEmbed = dynamic(() => import('@/components/map/KakaoMapEmbed'), {
+  ssr: false,
+  loading: () => <div className="w-full h-64 rounded-lg bg-gray-100 animate-pulse" />,
+})
 
 export const revalidate = 21600
 
@@ -91,6 +97,13 @@ export default async function ApartmentDetailPage({ params }: Props) {
             </p>
           </div>
         </div>
+
+        {apartment.lat && apartment.lng && (
+          <div className="mb-6">
+            <h2 className="text-base font-semibold mb-2">위치</h2>
+            <KakaoMapEmbed lat={apartment.lat} lng={apartment.lng} name={apartment.name} />
+          </div>
+        )}
 
         <div className="flex gap-3">
           <a
