@@ -37,8 +37,8 @@
     "@vitest/coverage-v8": "^4.1.7",
     "eslint": "^9",
     "eslint-config-next": "15.5.18",
-    "shadcn": "^4.8.1",
     "jsdom": "^29.1.1",
+    "shadcn": "^4.8.1",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.7"
