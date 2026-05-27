@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
@@ -8,33 +9,30 @@ interface Props {
   params: Promise<{ slug: string }>
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params
+const getArticle = cache(async (slug: string) => {
   const supabase = await createClient()
   const { data } = await supabase
     .from('articles')
-    .select('title, summary')
+    .select('title, summary, published_at, body')
     .eq('slug', slug)
     .eq('category', 'news')
     .single()
+  return data
+})
 
-  if (!data) return { title: '뉴스를 찾을 수 없습니다' }
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params
+  const article = await getArticle(slug)
+  if (!article) return { title: '뉴스를 찾을 수 없습니다' }
   return {
-    title: data.title,
-    description: data.summary ?? undefined,
+    title: article.title,
+    description: article.summary ?? undefined,
   }
 }
 
 export default async function NewsDetailPage({ params }: Props) {
   const { slug } = await params
-  const supabase = await createClient()
-  const { data: article } = await supabase
-    .from('articles')
-    .select('*')
-    .eq('slug', slug)
-    .eq('category', 'news')
-    .single()
-
+  const article = await getArticle(slug)
   if (!article) notFound()
 
   return (
