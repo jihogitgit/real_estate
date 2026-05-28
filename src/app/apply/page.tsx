@@ -4,6 +4,7 @@ import { getApartmentsByRegion } from '@/lib/apartments'
 import { createClient } from '@/lib/supabase/server'
 import ApartmentList from '@/components/apartment/ApartmentList'
 import ApartmentFilter from '@/components/apartment/ApartmentFilter'
+import AdSlot from '@/components/ads/AdSlot'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { Apartment } from '@/types'
 
@@ -48,6 +49,13 @@ export default async function ApplyPage({ searchParams }: Props) {
       <Suspense fallback={<Skeleton className="h-10 w-full" />}>
         <ApartmentFilter />
       </Suspense>
+
+      <AdSlot
+        type="adsense"
+        adClient={process.env.NEXT_PUBLIC_ADSENSE_CLIENT ?? ''}
+        adSlot="YOUR_AD_SLOT_ID"
+        className="my-4"
+      />
 
       <div className="mt-4">
         <ApartmentList apartments={apartments} />

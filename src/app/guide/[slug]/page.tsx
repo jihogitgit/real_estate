@@ -2,6 +2,7 @@ import { cache } from 'react'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import AdSlot from '@/components/ads/AdSlot'
 
 export const revalidate = 86400
 
@@ -54,6 +55,14 @@ export default async function GuideDetailPage({ params }: Props) {
           <p className="text-gray-400">내용이 없습니다.</p>
         )}
       </div>
+
+      <AdSlot
+        type="adfit"
+        adUnit="YOUR_ADFIT_UNIT_ID"
+        adWidth={320}
+        adHeight={100}
+        className="mt-8 flex justify-center"
+      />
     </div>
   )
 }

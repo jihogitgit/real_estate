@@ -31,6 +31,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const gaId = process.env.NEXT_PUBLIC_GA_ID
+
   return (
     <html lang="ko">
       <body className={inter.className}>
@@ -38,6 +40,28 @@ export default function RootLayout({
           src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_KEY}&autoload=false`}
           strategy="beforeInteractive"
         />
+
+        {process.env.NEXT_PUBLIC_ADSENSE_CLIENT && (
+          <Script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        )}
+
+        {gaId && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-init" strategy="afterInteractive">
+              {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaId}');`}
+            </Script>
+          </>
+        )}
+
         <AuthProvider>
           <Header />
           <main className="min-h-screen">{children}</main>
