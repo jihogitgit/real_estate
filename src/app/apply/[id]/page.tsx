@@ -1,17 +1,14 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import dynamic from 'next/dynamic'
 import type { Metadata } from 'next'
 import { getApartmentById } from '@/lib/apartments'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { Apartment } from '@/types'
-
-const KakaoMapEmbed = dynamic(() => import('@/components/map/KakaoMapEmbed'), {
-  ssr: false,
-  loading: () => <div className="w-full h-64 rounded-lg bg-gray-100 animate-pulse" />,
-})
+import KakaoMapEmbed from '@/components/map/KakaoMapEmbed'
+import SaveButton from '@/components/user/SaveButton'
+import AlertButton from '@/components/user/AlertButton'
 
 export const revalidate = 21600
 
@@ -105,7 +102,7 @@ export default async function ApartmentDetailPage({ params }: Props) {
           </div>
         )}
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <a
             href="https://apply.lh.or.kr"
             target="_blank"
@@ -120,6 +117,8 @@ export default async function ApartmentDetailPage({ params }: Props) {
           >
             {apartment.region} 분양 더보기
           </Link>
+          <SaveButton apartmentId={apartment.id} />
+          <AlertButton apartmentId={apartment.id} />
         </div>
       </div>
     </>

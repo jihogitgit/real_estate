@@ -28,8 +28,7 @@ export interface CheongahkItem {
   mnareaExcludePrivateRoadar?: number // 전용면적
 }
 
-export interface NormalizedApartment
-  extends Omit<Apartment, 'id' | 'lat' | 'lng' | 'supply_date' | 'min_price' | 'max_price' | 'created_at' | 'updated_at'> {}
+export type NormalizedApartment = Omit<Apartment, 'id' | 'lat' | 'lng' | 'supply_date' | 'min_price' | 'max_price' | 'created_at' | 'updated_at'>
 
 export interface Article {
   id: string
