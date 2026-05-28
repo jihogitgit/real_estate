@@ -13,7 +13,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-lg font-semibold">제1조 (목적)</h2>
           <p>
-            이 약관은 청약마당(이하 "서비스")의 이용 조건 및 절차, 이용자와 운영자의 권리·의무를 규정합니다.
+            이 약관은 청약마당(이하 &ldquo;서비스&rdquo;)의 이용 조건 및 절차, 이용자와 운영자의 권리·의무를 규정합니다.
           </p>
         </section>
 

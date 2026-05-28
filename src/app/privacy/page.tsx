@@ -16,7 +16,7 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-lg font-semibold">1. 수집하는 개인정보</h2>
           <p>
-            청약마당(이하 "서비스")은 카카오 소셜 로그인 시 이메일 주소를 수집합니다.
+            청약마당(이하 &ldquo;서비스&rdquo;)은 카카오 소셜 로그인 시 이메일 주소를 수집합니다.
             광고 서비스(Google AdSense, Kakao AdFit) 운영을 위해 쿠키 및 광고 식별자가 수집될 수 있습니다.
           </p>
         </section>
