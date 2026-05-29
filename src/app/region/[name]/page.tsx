@@ -64,6 +64,14 @@ export default async function RegionPage({ params }: Props) {
           </p>
         </section>
 
+        <p className="text-gray-400 text-xs mb-4">
+          청약홈 공공데이터 기준. 실제 청약 신청은{' '}
+          <a href="https://www.applyhome.co.kr" target="_blank" rel="noopener noreferrer" className="underline">
+            청약홈(applyhome.co.kr)
+          </a>
+          에서 확인하세요.
+        </p>
+
         <ApartmentList apartments={apartments} />
 
         {apartments.length === 0 && (

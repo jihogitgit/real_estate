@@ -45,6 +45,13 @@ export default async function ApplyPage({ searchParams }: Props) {
       <p className="text-gray-500 text-sm mb-4">
         총 {apartments.length}개 단지
       </p>
+      <p className="text-gray-400 text-xs mb-4">
+        한국부동산원 청약홈 공공데이터 기준. 실제 청약 신청은{' '}
+        <a href="https://www.applyhome.co.kr" target="_blank" rel="noopener noreferrer" className="underline">
+          청약홈
+        </a>
+        에서 하세요.
+      </p>
 
       <Suspense fallback={<Skeleton className="h-10 w-full" />}>
         <ApartmentFilter />
