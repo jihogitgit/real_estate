@@ -60,7 +60,7 @@ export default async function RegionPage({ params }: Props) {
           <p>
             <strong>{name}</strong> 지역의 최신 아파트 분양 청약 정보입니다.
             청약 자격, 일정, 공급 세대수를 확인하고 관심 단지를 저장하세요.
-            청약 신청은 <a href="https://apply.lh.or.kr" className="text-blue-600 underline" target="_blank" rel="noopener noreferrer">청약홈(apply.lh.or.kr)</a>에서 하실 수 있습니다.
+            청약 신청은 <a href="https://www.applyhome.co.kr" className="text-blue-600 underline" target="_blank" rel="noopener noreferrer">청약홈(applyhome.co.kr)</a>에서 하실 수 있습니다.
           </p>
         </section>
 

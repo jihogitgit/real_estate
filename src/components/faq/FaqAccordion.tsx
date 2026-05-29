@@ -27,8 +27,8 @@ export default function FaqAccordion({ categories }: Props) {
         <section key={cat.title}>
           <h2 className="text-lg font-semibold mb-4 text-gray-800">{cat.title}</h2>
           <Accordion.Root className="divide-y border rounded-lg overflow-hidden">
-            {cat.items.map((item, i) => (
-              <Accordion.Item key={`${cat.title}-${i}`} value={`${cat.title}-${i}`}>
+            {cat.items.map((item) => (
+              <Accordion.Item key={item.question} value={item.question}>
                 <Accordion.Header>
                   <Accordion.Trigger className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 [&[data-panel-open]_svg]:rotate-180">
                     {item.question}
