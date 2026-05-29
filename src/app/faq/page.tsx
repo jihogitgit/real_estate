@@ -5,6 +5,10 @@ import type { FaqCategory } from '@/components/faq/FaqAccordion'
 export const metadata: Metadata = {
   title: '자주 묻는 질문',
   description: '청약 1순위 조건, 가점 계산법, 특별공급 자격 등 청약마당 FAQ를 확인하세요.',
+  openGraph: {
+    title: '자주 묻는 질문 | 청약마당',
+    description: '청약 1순위 조건, 가점 계산법, 특별공급 자격 등 청약마당 FAQ를 확인하세요.',
+  },
 }
 
 const FAQ_DATA: FaqCategory[] = [
