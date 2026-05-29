@@ -1,23 +1,19 @@
 import type { CheongahkItem, NormalizedApartment } from '@/types'
 
-const BASE_URL = 'https://apis.data.go.kr/B552555/APTLttotPblancDetail'
-
-function formatDate(yyyymmdd: string): string {
-  if (!yyyymmdd || yyyymmdd.length !== 8) return yyyymmdd
-  return `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`
-}
+const BASE_URL = 'https://api.odcloud.kr/api/ApplyhomeInfoDetailSvc/v1'
 
 export function normalizeApartment(item: CheongahkItem): NormalizedApartment {
-  const parts = (item.suplyRgnde ?? '').split(' ')
+  const addrParts = (item.HSSPLY_ADRES ?? '').split(' ')
+  const district = addrParts[1] ?? null
   return {
-    source_id: item.pblancNo,
-    name: item.pblancNm,
-    region: parts[0] ?? '',
-    district: parts[1] ?? '',
-    address: null,
-    apply_start: formatDate(item.rceptBgnde),
-    apply_end: formatDate(item.rceptEndde),
-    total_units: item.totSuplyHshldco ?? 0,
+    source_id: item.PBLANC_NO,
+    name: item.HOUSE_NM,
+    region: item.SUBSCRPT_AREA_CODE_NM ?? '',
+    district,
+    address: item.HSSPLY_ADRES ?? null,
+    apply_start: item.RCEPT_BGNDE ?? null,
+    apply_end: item.RCEPT_ENDDE ?? null,
+    total_units: item.TOT_SUPLY_HSHLDCO ?? 0,
   }
 }
 
@@ -28,15 +24,14 @@ export async function fetchApartmentList(params: {
   const { pageNo = 1, numOfRows = 100 } = params
   const apiKey = process.env.CHEONGAHK_API_KEY
 
-  const url = new URL(`${BASE_URL}/getLttotPblancSummaryList`)
+  const url = new URL(`${BASE_URL}/getAPTLttotPblancDetail`)
   url.searchParams.set('serviceKey', apiKey ?? '')
-  url.searchParams.set('pageNo', String(pageNo))
-  url.searchParams.set('numOfRows', String(numOfRows))
-  url.searchParams.set('_type', 'json')
+  url.searchParams.set('page', String(pageNo))
+  url.searchParams.set('perPage', String(numOfRows))
 
   const res = await fetch(url.toString(), { cache: 'no-store' })
   if (!res.ok) throw new Error(`청약홈 API error: ${res.status}`)
 
   const data = await res.json()
-  return data?.response?.body?.items?.item ?? []
+  return data?.data ?? []
 }

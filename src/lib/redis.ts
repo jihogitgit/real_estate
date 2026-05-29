@@ -1,9 +1,12 @@
 import { Redis } from '@upstash/redis'
 
-export const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-})
+const url = process.env.UPSTASH_REDIS_REST_URL
+const token = process.env.UPSTASH_REDIS_REST_TOKEN
+const isConfigured = url && !url.includes('your-redis') && token && !token.includes('your-token')
+
+export const redis = isConfigured
+  ? new Redis({ url, token })
+  : null
 
 export const CACHE_KEYS = {
   apartmentsList: (region: string) => `apartments:list:${region}`,
@@ -26,6 +29,8 @@ export async function getOrSet<T>(
   ttl: number,
   fetcher: () => Promise<T>
 ): Promise<T> {
+  if (!redis) return fetcher()
+
   const cached = await redis.get<T>(key)
   if (cached !== null) return cached
 

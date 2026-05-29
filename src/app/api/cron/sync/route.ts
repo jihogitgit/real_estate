@@ -28,10 +28,12 @@ export async function GET(request: Request) {
     if (error) throw error
 
     const regions = [...new Set(normalized.map((a) => a.region).filter(Boolean))]
-    await Promise.all([
-      ...regions.map((r) => redis.del(CACHE_KEYS.apartmentsList(r))),
-      redis.del(CACHE_KEYS.allRegions()),
-    ])
+    if (redis) {
+      await Promise.all([
+        ...regions.map((r) => redis!.del(CACHE_KEYS.apartmentsList(r))),
+        redis.del(CACHE_KEYS.allRegions()),
+      ])
+    }
 
     return NextResponse.json({ synced: normalized.length, regions })
   } catch (err) {

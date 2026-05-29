@@ -17,15 +17,16 @@ export interface Apartment {
   updated_at: string
 }
 
-// 청약홈 공공 API 응답 원본 필드
+// 청약홈 공공 API 응답 원본 필드 (ApplyhomeInfoDetailSvc/v1/getAPTLttotPblancDetail)
 export interface CheongahkItem {
-  pblancNo: string       // 공고번호
-  pblancNm: string       // 공고명
-  rceptBgnde: string     // 접수 시작일 (YYYYMMDD)
-  rceptEndde: string     // 접수 종료일 (YYYYMMDD)
-  suplyRgnde: string     // 공급 지역 (예: "서울 강남구")
-  totSuplyHshldco: number // 총 공급 세대수
-  mnareaExcludePrivateRoadar?: number // 전용면적
+  PBLANC_NO: string            // 공고번호
+  HOUSE_NM: string             // 주택명
+  RCEPT_BGNDE: string          // 청약 시작일 (YYYY-MM-DD)
+  RCEPT_ENDDE: string          // 청약 종료일 (YYYY-MM-DD)
+  SUBSCRPT_AREA_CODE_NM: string // 청약지역명 (예: "서울", "경기")
+  HSSPLY_ADRES: string         // 공급 위치 주소
+  TOT_SUPLY_HSHLDCO: number    // 총 공급 세대수
+  HOUSE_MANAGE_NO: string      // 주택관리번호
 }
 
 export type NormalizedApartment = Omit<Apartment, 'id' | 'lat' | 'lng' | 'supply_date' | 'min_price' | 'max_price' | 'created_at' | 'updated_at'>
