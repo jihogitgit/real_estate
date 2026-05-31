@@ -11,6 +11,16 @@ const mockItem: CheongahkItem = {
   HSSPLY_ADRES: '서울특별시 강남구 역삼동 123',
   TOT_SUPLY_HSHLDCO: 100,
   HOUSE_MANAGE_NO: 'TEST001',
+  RCRIT_PBLANC_DE: '',
+  SPSPLY_RCEPT_BGNDE: '',
+  GNRL_RNK1_CRSPAREA_RCPTDE: '',
+  PRZWNER_PRESNATN_DE: '',
+  CNTRCT_CNCLS_BGNDE: '',
+  CNTRCT_CNCLS_ENDDE: '',
+  MVN_PREARNGE_YM: '',
+  PBLANC_URL: '',
+  PARCPRC_ULS_AT: 'N',
+  HOUSE_DTL_SECD_NM: '',
 }
 
 describe('normalizeApartment', () => {
@@ -25,6 +35,16 @@ describe('normalizeApartment', () => {
       apply_start: '2025-06-01',
       apply_end: '2025-06-05',
       total_units: 100,
+      announce_date: null,
+      special_supply_date: null,
+      priority1_date: null,
+      winner_date: null,
+      contract_start: null,
+      contract_end: null,
+      move_in_month: null,
+      pblanc_url: null,
+      price_cap: false,
+      house_type: null,
     })
   })
 
