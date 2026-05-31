@@ -19,8 +19,8 @@ export default function ApartmentChecklist({ priceCap }: Props) {
     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
       <h2 className="text-base font-semibold mb-3">신청 전 확인 체크리스트</h2>
       <ul className="space-y-2">
-        {[...COMMON_ITEMS, conditionalItem].map(item => (
-          <li key={item} className="flex items-start gap-2 text-sm">
+        {[...COMMON_ITEMS, conditionalItem].map((item, i) => (
+          <li key={i} className="flex items-start gap-2 text-sm">
             <span className="mt-0.5 text-yellow-600 shrink-0">☐</span>
             <span>{item}</span>
           </li>
