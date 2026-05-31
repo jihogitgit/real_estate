@@ -13,14 +13,21 @@ function toIcsDate(dateStr: string): string {
   return dateStr.replace(/-/g, '')
 }
 
+function nextDayIcsDate(dateStr: string): string {
+  const d = new Date(dateStr)
+  d.setDate(d.getDate() + 1)
+  return d.toISOString().slice(0, 10).replace(/-/g, '')
+}
+
 function makeIcs(events: Array<{ summary: string; date: string; url: string }>): string {
   const lines: string[] = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//청약마당//KR']
   for (const e of events) {
-    const d = toIcsDate(e.date)
+    const uid = `${Date.now()}-${Math.random().toString(36).slice(2)}@cheongahkdang`
     lines.push(
       'BEGIN:VEVENT',
-      `DTSTART;VALUE=DATE:${d}`,
-      `DTEND;VALUE=DATE:${d}`,
+      `UID:${uid}`,
+      `DTSTART;VALUE=DATE:${toIcsDate(e.date)}`,
+      `DTEND;VALUE=DATE:${nextDayIcsDate(e.date)}`,
       `SUMMARY:${e.summary}`,
       `URL:${e.url}`,
       'END:VEVENT',
@@ -45,11 +52,13 @@ export default function IcsDownloadButton({ name, priority1Date, applyEnd, winne
     if (events.length === 0) return
 
     const blob = new Blob([makeIcs(events)], { type: 'text/calendar' })
+    const blobUrl = URL.createObjectURL(blob)
     const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
+    link.href = blobUrl
     link.download = `${name}-청약일정.ics`
     link.click()
-    URL.revokeObjectURL(link.href)
+    // Defer revoke so browser has time to initiate the download
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 100)
   }
 
   return (
