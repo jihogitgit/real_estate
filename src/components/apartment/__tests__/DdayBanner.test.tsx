@@ -53,6 +53,19 @@ describe('DdayBanner', () => {
     await waitFor(() => expect(screen.getByText('마감')).toBeInTheDocument())
   })
 
+  it('오늘이 마감일이면 마감을 표시한다 (D-0은 마감)', async () => {
+    render(
+      <DdayBanner
+        priority1Date="2025-05-28"
+        applyEnd={null}
+        winnerDate={null}
+        contractStart={null}
+        moveInMonth={null}
+      />
+    )
+    await waitFor(() => expect(screen.getByText('마감')).toBeInTheDocument())
+  })
+
   it('winnerDate, contractStart, moveInMonth를 우측에 표시한다', async () => {
     render(
       <DdayBanner

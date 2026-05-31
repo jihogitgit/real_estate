@@ -12,6 +12,7 @@ interface Props {
 function daysUntil(dateStr: string | null, today: Date): number | null {
   if (!dateStr) return null
   const target = new Date(dateStr)
+  if (isNaN(target.getTime())) return null
   target.setHours(0, 0, 0, 0)
   const base = new Date(today)
   base.setHours(0, 0, 0, 0)
