@@ -18,6 +18,16 @@ const mockApartment: Apartment = {
   source_id: 'SRC001',
   created_at: '2025-01-01T00:00:00Z',
   updated_at: '2025-01-01T00:00:00Z',
+  announce_date: null,
+  special_supply_date: null,
+  priority1_date: null,
+  winner_date: null,
+  contract_start: null,
+  contract_end: null,
+  move_in_month: null,
+  pblanc_url: null,
+  price_cap: null,
+  house_type: null,
 }
 
 const mockCreateClient = vi.fn()

@@ -15,18 +15,38 @@ export interface Apartment {
   source_id: string
   created_at: string
   updated_at: string
+  announce_date: string | null
+  special_supply_date: string | null
+  priority1_date: string | null
+  winner_date: string | null
+  contract_start: string | null
+  contract_end: string | null
+  move_in_month: string | null
+  pblanc_url: string | null
+  price_cap: boolean | null
+  house_type: string | null
 }
 
 // 청약홈 공공 API 응답 원본 필드 (ApplyhomeInfoDetailSvc/v1/getAPTLttotPblancDetail)
 export interface CheongahkItem {
-  PBLANC_NO: string            // 공고번호
-  HOUSE_NM: string             // 주택명
-  RCEPT_BGNDE: string          // 청약 시작일 (YYYY-MM-DD)
-  RCEPT_ENDDE: string          // 청약 종료일 (YYYY-MM-DD)
-  SUBSCRPT_AREA_CODE_NM: string // 청약지역명 (예: "서울", "경기")
-  HSSPLY_ADRES: string         // 공급 위치 주소
-  TOT_SUPLY_HSHLDCO: number    // 총 공급 세대수
-  HOUSE_MANAGE_NO: string      // 주택관리번호
+  PBLANC_NO: string
+  HOUSE_NM: string
+  RCEPT_BGNDE: string
+  RCEPT_ENDDE: string
+  SUBSCRPT_AREA_CODE_NM: string
+  HSSPLY_ADRES: string
+  TOT_SUPLY_HSHLDCO: number
+  HOUSE_MANAGE_NO: string
+  RCRIT_PBLANC_DE: string
+  SPSPLY_RCEPT_BGNDE: string
+  GNRL_RNK1_CRSPAREA_RCPTDE: string
+  PRZWNER_PRESNATN_DE: string
+  CNTRCT_CNCLS_BGNDE: string
+  CNTRCT_CNCLS_ENDDE: string
+  MVN_PREARNGE_YM: string
+  PBLANC_URL: string
+  PARCPRC_ULS_AT: string
+  HOUSE_DTL_SECD_NM: string
 }
 
 export type NormalizedApartment = Omit<Apartment, 'id' | 'lat' | 'lng' | 'supply_date' | 'min_price' | 'max_price' | 'created_at' | 'updated_at'>
