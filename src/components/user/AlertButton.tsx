@@ -30,7 +30,7 @@ export default function AlertButton({ apartmentId }: Props) {
   }
 
   return (
-    <Button variant="outline" size="sm" onClick={handleClick} disabled={loading}>
+    <Button variant="outline" onClick={handleClick} disabled={loading}>
       🔔 알림 받기
     </Button>
   )

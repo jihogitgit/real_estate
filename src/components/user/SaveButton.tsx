@@ -34,7 +34,6 @@ export default function SaveButton({ apartmentId, initialSaved = false }: Props)
   return (
     <Button
       variant={saved ? 'default' : 'outline'}
-      size="sm"
       onClick={handleClick}
       disabled={loading}
     >

@@ -1,4 +1,5 @@
 'use client'
+import { Button } from '@/components/ui/button'
 
 interface Props {
   name: string
@@ -62,12 +63,8 @@ export default function IcsDownloadButton({ name, priority1Date, applyEnd, winne
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleDownload}
-      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md border border-gray-300 text-sm hover:bg-gray-50"
-    >
+    <Button variant="outline" type="button" onClick={handleDownload}>
       📅 캘린더에 추가
-    </button>
+    </Button>
   )
 }
