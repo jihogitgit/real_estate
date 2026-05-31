@@ -9,6 +9,10 @@ import type { Apartment } from '@/types'
 import KakaoMapEmbed from '@/components/map/KakaoMapEmbed'
 import SaveButton from '@/components/user/SaveButton'
 import AlertButton from '@/components/user/AlertButton'
+import DdayBanner from '@/components/apartment/DdayBanner'
+import SubscriptionTimeline from '@/components/apartment/SubscriptionTimeline'
+import ApartmentChecklist from '@/components/apartment/ApartmentChecklist'
+import IcsDownloadButton from '@/components/apartment/IcsDownloadButton'
 
 export const revalidate = 21600
 
@@ -20,7 +24,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
   const apartment = await getApartmentById(id)
   if (!apartment) return { title: '단지를 찾을 수 없습니다' }
-
   return {
     title: `${apartment.name} 분양 정보`,
     description: `${apartment.region} ${apartment.district ?? ''} ${apartment.name} 청약 일정, 세대수, 위치 정보.`,
@@ -48,7 +51,6 @@ function JsonLd({ apartment }: { apartment: Apartment }) {
       ? { geo: { '@type': 'GeoCoordinates', latitude: apartment.lat, longitude: apartment.lng } }
       : {}),
   }
-
   return (
     <script
       type="application/ld+json"
@@ -62,38 +64,64 @@ export default async function ApartmentDetailPage({ params }: Props) {
   const apartment = await getApartmentById(id)
   if (!apartment) notFound()
 
+  const officialUrl = apartment.pblanc_url ?? 'https://www.applyhome.co.kr'
+
   return (
     <>
       <JsonLd apartment={apartment} />
       <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <div className="mb-6">
-          <div className="flex items-start gap-3 mb-2">
+        <div className="mb-4">
+          <div className="flex items-start gap-3 mb-1">
             <h1 className="text-2xl font-bold">{apartment.name}</h1>
             <Badge>{apartment.region}</Badge>
           </div>
-          <p className="text-gray-500">{apartment.address ?? `${apartment.region} ${apartment.district ?? ''}`}</p>
+          <p className="text-gray-500 text-sm">
+            {apartment.address ?? `${apartment.region} ${apartment.district ?? ''}`}
+          </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <p className="text-xs text-gray-400 mb-1">청약 기간</p>
-            <p className="font-medium text-sm">
-              {apartment.apply_start ?? '-'} ~ {apartment.apply_end ?? '-'}
-            </p>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-4">
+        <DdayBanner
+          priority1Date={apartment.priority1_date}
+          applyEnd={apartment.apply_end}
+          winnerDate={apartment.winner_date}
+          contractStart={apartment.contract_start}
+          moveInMonth={apartment.move_in_month}
+        />
+
+        <SubscriptionTimeline
+          announceDate={apartment.announce_date}
+          specialSupplyDate={apartment.special_supply_date}
+          priority1Date={apartment.priority1_date}
+          applyEnd={apartment.apply_end}
+          winnerDate={apartment.winner_date}
+          contractStart={apartment.contract_start}
+          contractEnd={apartment.contract_end}
+        />
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div className="bg-gray-50 rounded-lg p-3">
             <p className="text-xs text-gray-400 mb-1">총 세대수</p>
             <p className="font-medium">{apartment.total_units?.toLocaleString() ?? '-'}세대</p>
           </div>
-          <div className="bg-gray-50 rounded-lg p-4">
+          <div className="bg-gray-50 rounded-lg p-3">
+            <p className="text-xs text-gray-400 mb-1">주택 유형</p>
+            <p className="font-medium text-sm">{apartment.house_type ?? '-'}</p>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-3">
+            <p className="text-xs text-gray-400 mb-1">분양가상한제</p>
+            <p className="font-medium text-sm">
+              {apartment.price_cap === null ? '-' : apartment.price_cap ? '적용' : '미적용'}
+            </p>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-3">
             <p className="text-xs text-gray-400 mb-1">분양가</p>
             <p className="font-medium text-sm">
-              {apartment.min_price
-                ? `${(apartment.min_price / 10000).toFixed(0)}억 ~`
-                : '-'}
+              {apartment.min_price ? `${(apartment.min_price / 10000).toFixed(0)}억~` : '공고 확인'}
             </p>
           </div>
         </div>
+
+        <ApartmentChecklist priceCap={apartment.price_cap} houseType={apartment.house_type} />
 
         {apartment.lat && apartment.lng && (
           <div className="mb-6">
@@ -104,21 +132,29 @@ export default async function ApartmentDetailPage({ params }: Props) {
 
         <div className="flex flex-wrap gap-3">
           <a
-            href="https://apply.lh.or.kr"
+            href={officialUrl}
             target="_blank"
             rel="noopener noreferrer"
             className={cn(buttonVariants({ variant: 'default' }))}
           >
-            청약홈 바로가기
+            공식 공고 바로가기
           </a>
+          <IcsDownloadButton
+            name={apartment.name}
+            priority1Date={apartment.priority1_date}
+            applyEnd={apartment.apply_end}
+            winnerDate={apartment.winner_date}
+            contractStart={apartment.contract_start}
+            pblancUrl={apartment.pblanc_url}
+          />
           <Link
             href={`/region/${apartment.region}`}
             className={cn(buttonVariants({ variant: 'outline' }))}
           >
             {apartment.region} 분양 더보기
           </Link>
-          <SaveButton apartmentId={apartment.id} />
           <AlertButton apartmentId={apartment.id} />
+          <SaveButton apartmentId={apartment.id} />
         </div>
       </div>
     </>
