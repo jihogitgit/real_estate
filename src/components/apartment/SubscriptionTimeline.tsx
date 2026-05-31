@@ -27,6 +27,7 @@ function buildSteps(props: Props, now: Date): Step[] {
   const raw: Array<{ label: string; date: string | null; dateEnd?: string | null }> = [
     { label: '모집공고', date: props.announceDate },
     { label: '특별공급', date: props.specialSupplyDate },
+    // priority1Date가 없으면 applyEnd 기준으로 표시 (명시적 접수일 없는 공고 대비)
     { label: '1순위 접수', date: props.priority1Date ?? props.applyEnd, dateEnd: props.applyEnd },
     { label: '당첨자 발표', date: props.winnerDate },
     { label: '계약', date: props.contractStart, dateEnd: props.contractEnd },
@@ -46,13 +47,13 @@ function buildSteps(props: Props, now: Date): Step[] {
 }
 
 export default function SubscriptionTimeline(props: Props) {
-  const [steps, setSteps] = useState<Step[] | null>(null)
+  const [now, setNow] = useState<Date | null>(null)
 
-  useEffect(() => {
-    setSteps(buildSteps(props, new Date()))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  // Run once on mount to capture client-side date (avoids SSR/CSR mismatch).
+  // Subsequent prop changes re-derive steps from the captured `now`.
+  useEffect(() => { setNow(new Date()) }, [])
 
+  const steps = now ? buildSteps(props, now) : null
   if (!steps) return null
 
   return (
@@ -60,7 +61,7 @@ export default function SubscriptionTimeline(props: Props) {
       <h2 className="text-base font-semibold mb-3">청약 일정</h2>
       <ol className="space-y-3 ml-1">
         {steps.map((step, i) => (
-          <li key={step.label} className="flex gap-3">
+          <li key={i} className="flex gap-3">
             <div className="flex flex-col items-center">
               <span className={`h-3 w-3 rounded-full shrink-0 mt-0.5 ${
                 step.status === 'done' ? 'bg-gray-300' :
