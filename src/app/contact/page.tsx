@@ -22,10 +22,10 @@ export default function ContactPage() {
           </p>
           <p className="mt-2">
             <a
-              href="mailto:contact@example.com"
+              href="mailto:yooho7987@gmail.com"
               className="text-blue-600 underline text-base font-medium"
             >
-              contact@example.com
+              yooho7987@gmail.com
             </a>
           </p>
         </section>

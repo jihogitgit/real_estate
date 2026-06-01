@@ -51,7 +51,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="text-lg font-semibold">제6조 (문의)</h2>
-          <p>이메일: contact@example.com</p>
+          <p>이메일: yooho7987@gmail.com</p>
         </section>
       </div>
     </div>

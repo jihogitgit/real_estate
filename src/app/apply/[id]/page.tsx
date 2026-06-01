@@ -20,6 +20,8 @@ interface Props {
   params: Promise<{ id: string }>
 }
 
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://your-domain.vercel.app'
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
   const apartment = await getApartmentById(id)
@@ -27,6 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${apartment.name} 분양 정보`,
     description: `${apartment.region} ${apartment.district ?? ''} ${apartment.name} 청약 일정, 세대수, 위치 정보.`,
+    alternates: { canonical: `${BASE_URL}/apply/${id}` },
     openGraph: {
       title: `${apartment.name} | 청약마당`,
       description: `청약 기간: ${apartment.apply_start} ~ ${apartment.apply_end}`,

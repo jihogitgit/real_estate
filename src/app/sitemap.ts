@@ -23,11 +23,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const { data: articles } = await supabase
     .from('articles')
-    .select('slug, updated_at')
+    .select('slug, updated_at, category')
     .limit(500)
 
   const articleUrls: MetadataRoute.Sitemap = (articles ?? []).map((art) => ({
-    url: `${BASE_URL}/guide/${art.slug}`,
+    url: `${BASE_URL}/${art.category === 'news' ? 'news' : 'guide'}/${art.slug}`,
     lastModified: new Date(art.updated_at),
     changeFrequency: 'weekly',
     priority: 0.7,

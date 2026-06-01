@@ -56,13 +56,13 @@ export default function PrivacyPage() {
           <p>
             개인정보 열람·수정·삭제 요청은 아래 이메일로 연락 주세요.
             <br />
-            <strong>이메일: contact@example.com</strong>
+            <strong>이메일: yooho7987@gmail.com</strong>
           </p>
         </section>
 
         <section>
           <h2 className="text-lg font-semibold">7. 개인정보보호책임자</h2>
-          <p>이름: 운영자 / 이메일: contact@example.com</p>
+          <p>이름: 운영자 / 이메일: yooho7987@gmail.com</p>
         </section>
       </div>
     </div>

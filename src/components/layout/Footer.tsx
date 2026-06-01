@@ -11,7 +11,7 @@ export default function Footer() {
           <Link href="/privacy" className="hover:text-gray-800">개인정보처리방침</Link>
           <Link href="/terms" className="hover:text-gray-800">이용약관</Link>
         </div>
-        <p>청약마당 | 이메일: contact@example.com</p>
+        <p>청약마당 | 이메일: yooho7987@gmail.com</p>
         <p className="mt-1">
           본 사이트는 공공데이터포털 API를 활용합니다. 청약 정보는 반드시 청약홈(applyhome.co.kr)에서 확인하세요.
         </p>
