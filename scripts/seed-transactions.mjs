@@ -253,8 +253,10 @@ async function main() {
   const { data: regions, error: regErr } = await supabase.from('regions').select('lawd_cd')
   if (regErr) { console.error(regErr.message); process.exit(1) }
 
+  const SIDO_FILTER = process.env.SEED_SIDO ? process.env.SEED_SIDO.split(',') : null
   const lawdCds = regions.map(r => r.lawd_cd)
-  console.log(`Found ${lawdCds.length} regions`)
+    .filter(cd => !SIDO_FILTER || SIDO_FILTER.some(p => cd.startsWith(p)))
+  console.log(`Found ${lawdCds.length} regions${SIDO_FILTER ? ` (filtered: ${SIDO_FILTER.join(',')})` : ''}`)
 
   const tasks = []
   let totalInserted = 0
