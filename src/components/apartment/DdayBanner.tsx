@@ -33,21 +33,31 @@ export default function DdayBanner({ applyEnd, priority1Date, winnerDate, contra
 
   if (!today) return null
 
-  const mainRef = priority1Date ?? applyEnd
-  const mainDays = daysUntil(mainRef, today)
+  const applyEndDays = daysUntil(applyEnd, today)
+  const priority1Days = daysUntil(priority1Date, today)
   const winnerDays = daysUntil(winnerDate, today)
   const contractDays = daysUntil(contractStart, today)
   const moveIn = formatMoveIn(moveInMonth)
-  const isExpired = mainDays !== null && mainDays <= 0
+
+  const isExpired =
+    priority1Days !== null ? priority1Days <= 0
+    : applyEndDays !== null ? applyEndDays <= 0
+    : winnerDays !== null ? winnerDays < 0
+    : false
+
+  const showPriority1 = priority1Days !== null && priority1Days > 0
+  const showApplyEnd = applyEndDays !== null && applyEndDays > 0
+  const displayDays = showPriority1 ? priority1Days : showApplyEnd ? applyEndDays : null
+  const displayLabel = showPriority1 ? '1순위 접수 마감까지' : showApplyEnd ? '청약 마감까지' : '일정 확인'
 
   return (
     <div className={`rounded-lg p-4 mb-6 flex gap-6 ${isExpired ? 'bg-gray-100' : 'bg-blue-50'}`}>
       <div className="flex-1">
         <p className={`text-3xl font-bold ${isExpired ? 'text-gray-400' : 'text-blue-600'}`}>
-          {mainDays === null ? '-' : mainDays <= 0 ? '마감' : `D-${mainDays}`}
+          {isExpired ? '마감' : displayDays === null ? '-' : displayDays === 0 ? 'D-Day' : `D-${displayDays}`}
         </p>
         <p className="text-xs text-gray-500 mt-1">
-          {priority1Date ? '1순위 접수 마감까지' : '청약 마감까지'}
+          {isExpired ? '청약 마감' : displayLabel}
         </p>
       </div>
       <div className="text-right text-sm space-y-1 self-center">
