@@ -224,6 +224,7 @@ async function fetchAllPages(service, lawdCd, dealYmd) {
     url.searchParams.set('_type', 'json')
 
     const res = await fetch(url.toString())
+    if (res.status === 500) return all  // RTMS returns 500 for empty datasets
     if (!res.ok) throw new Error(`RTMS API error: ${res.status} [${service}/${lawdCd}/${dealYmd}]`)
     const data = await res.json()
     const items = extractItems(data)
