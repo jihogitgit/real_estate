@@ -34,6 +34,19 @@ function getRecentMonths(n) {
   return months
 }
 
+// Returns all months from startYm (e.g. '202501') up to last month (current month API returns 500)
+function getMonthsFrom(startYm) {
+  const months = []
+  const now = new Date()
+  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+  let cur = new Date(parseInt(startYm.slice(0, 4)), parseInt(startYm.slice(4, 6)) - 1, 1)
+  while (cur <= lastMonth) {
+    months.push(`${cur.getFullYear()}${String(cur.getMonth() + 1).padStart(2, '0')}`)
+    cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1)
+  }
+  return months
+}
+
 function extractItems(data) {
   const items = data?.response?.body?.items
   if (!items || typeof items === 'string') return []
@@ -231,8 +244,10 @@ async function upsertBatch(table, rows) {
 }
 
 async function main() {
-  const months = getRecentMonths(3)
-  console.log(`Syncing months: ${months.join(', ')}`)
+  const months = process.env.SEED_FROM
+    ? getMonthsFrom(process.env.SEED_FROM)
+    : getRecentMonths(3)
+  console.log(`Syncing months: ${months.join(', ')} (total: ${months.length})`)
 
   const { data: regions, error: regErr } = await supabase.from('regions').select('lawd_cd')
   if (regErr) { console.error(regErr.message); process.exit(1) }
