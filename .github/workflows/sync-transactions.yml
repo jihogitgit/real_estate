@@ -1,0 +1,45 @@
+name: Sync Real Estate Transactions
+
+on:
+  schedule:
+    # 매월 1일 오전 9시 KST (0시 UTC)
+    - cron: '0 0 1 * *'
+  workflow_dispatch:
+    inputs:
+      ym:
+        description: '수집 연월 (YYYYMM, 미입력 시 전월)'
+        required: false
+        default: ''
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Sync transactions via cron API
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+        run: |
+          YM="${{ github.event.inputs.ym }}"
+          if [ -z "$YM" ]; then
+            URL="${SITE_URL}/api/cron/sync-transactions"
+          else
+            URL="${SITE_URL}/api/cron/sync-transactions?ym=${YM}"
+          fi
+          echo "Calling: $URL"
+          RESPONSE=$(curl -s -o /tmp/response.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "$URL")
+          echo "HTTP status: $RESPONSE"
+          cat /tmp/response.json
+          if [ "$RESPONSE" != "200" ]; then exit 1; fi

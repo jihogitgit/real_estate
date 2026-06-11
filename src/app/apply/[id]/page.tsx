@@ -7,6 +7,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { Apartment } from '@/types'
 import KakaoMapEmbed from '@/components/map/KakaoMapEmbed'
+import NearbyTransactionsWidget from '@/components/real-estate/NearbyTransactionsWidget'
 import SaveButton from '@/components/user/SaveButton'
 import AlertButton from '@/components/user/AlertButton'
 import DdayBanner from '@/components/apartment/DdayBanner'
@@ -132,6 +133,11 @@ export default async function ApartmentDetailPage({ params }: Props) {
             <KakaoMapEmbed lat={apartment.lat} lng={apartment.lng} name={apartment.name} />
           </div>
         )}
+
+        <NearbyTransactionsWidget
+          apartmentName={apartment.name}
+          district={apartment.district}
+        />
 
         <div className="flex flex-wrap gap-3">
           <a
