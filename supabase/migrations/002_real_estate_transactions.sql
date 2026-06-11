@@ -1,6 +1,15 @@
 -- pg_trgm extension for fuzzy building name search
 create extension if not exists pg_trgm;
 
+-- updated_at trigger function (idempotent — already exists from 001 in production)
+create or replace function update_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
 -- ============================================================
 -- regions (법정동코드 시군구 단위)
 -- ============================================================
