@@ -81,7 +81,7 @@ async function fetchAllPages(endpoint, method, lawdCd, dealYmd) {
     if (!res.ok) throw new Error(`RTMS ${res.status} [${endpoint}/${lawdCd}/${dealYmd}]`)
     const data = await res.json()
     const resultCode = data?.response?.header?.resultCode
-    if (resultCode && resultCode !== '00') {
+    if (resultCode && !['00', '000', '0000'].includes(resultCode)) {
       throw new Error(`RTMS API error ${resultCode}: ${data?.response?.header?.resultMsg} [${endpoint}/${lawdCd}/${dealYmd}]`)
     }
     const items = extractItems(data)
