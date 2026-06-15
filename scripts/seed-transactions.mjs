@@ -84,6 +84,12 @@ async function fetchAllPages(endpoint, method, lawdCd, dealYmd) {
     if (resultCode && !['00', '000', '0000'].includes(resultCode)) {
       throw new Error(`RTMS API error ${resultCode}: ${data?.response?.header?.resultMsg} [${endpoint}/${lawdCd}/${dealYmd}]`)
     }
+    if (pageNo === 1) {
+      const totalCount = data?.response?.body?.totalCount
+      const rawItems = data?.response?.body?.items
+      const firstItem = rawItems?.item ? (Array.isArray(rawItems.item) ? rawItems.item[0] : rawItems.item) : null
+      console.log(`[DBG] ${endpoint}/${lawdCd}/${dealYmd} totalCount=${totalCount} itemsType=${typeof rawItems} firstItemKeys=${firstItem ? Object.keys(firstItem).join(',') : 'none'}`)
+    }
     const items = extractItems(data)
     all.push(...items)
     if (items.length < 1000) break
