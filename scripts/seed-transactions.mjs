@@ -11,16 +11,16 @@ if (!supabaseUrl || !serviceRoleKey || !apiKey) {
 }
 
 const supabase = createClient(supabaseUrl, serviceRoleKey)
-const BASE_URL = 'https://apis.data.go.kr/1613000/RTMSDataSvc'
+const API_BASE = 'https://apis.data.go.kr/1613000'
 
-// service → property type / deal category
+// Each RTMS service has its own endpoint path: /{ServiceName}/{methodName}
 const SERVICES = [
-  { service: 'getRTMSDataSvcAptTradeDev',   propType: 'apartment', dealCat: 'trade' },
-  { service: 'getRTMSDataSvcAptRent',        propType: 'apartment', dealCat: 'rent'  },
-  { service: 'getRTMSDataSvcOffiTrade',      propType: 'officetel', dealCat: 'trade' },
-  { service: 'getRTMSDataSvcOffiRent',       propType: 'officetel', dealCat: 'rent'  },
-  { service: 'getRTMSDataSvcRHDwelling',     propType: 'villa',     dealCat: 'trade' },
-  { service: 'getRTMSDataSvcRHDwellingRent', propType: 'villa',     dealCat: 'rent'  },
+  { endpoint: 'RTMSDataSvcAptTradeDev', method: 'getRTMSDataSvcAptTradeDev', propType: 'apartment', dealCat: 'trade' },
+  { endpoint: 'RTMSDataSvcAptRent',     method: 'getRTMSDataSvcAptRent',     propType: 'apartment', dealCat: 'rent'  },
+  { endpoint: 'RTMSDataSvcOffiTrade',   method: 'getRTMSDataSvcOffiTrade',   propType: 'officetel', dealCat: 'trade' },
+  { endpoint: 'RTMSDataSvcOffiRent',    method: 'getRTMSDataSvcOffiRent',    propType: 'officetel', dealCat: 'rent'  },
+  { endpoint: 'RTMSDataSvcRHDwelling',  method: 'getRTMSDataSvcRHDwelling',  propType: 'villa',     dealCat: 'trade' },
+  { endpoint: 'RTMSDataSvcRHRent',      method: 'getRTMSDataSvcRHRent',      propType: 'villa',     dealCat: 'rent'  },
 ]
 
 // ── date helpers ────────────────────────────────────────────
@@ -65,11 +65,11 @@ async function withRetry(fn, retries = 3, baseDelay = 1000) {
   }
 }
 
-async function fetchAllPages(service, lawdCd, dealYmd) {
+async function fetchAllPages(endpoint, method, lawdCd, dealYmd) {
   const all = []
   let pageNo = 1
   while (true) {
-    const url = new URL(`${BASE_URL}/${service}`)
+    const url = new URL(`${API_BASE}/${endpoint}/${method}`)
     url.searchParams.set('serviceKey', apiKey)
     url.searchParams.set('LAWD_CD', lawdCd)
     url.searchParams.set('DEAL_YMD', dealYmd)
@@ -78,9 +78,12 @@ async function fetchAllPages(service, lawdCd, dealYmd) {
     url.searchParams.set('_type', 'json')
 
     const res = await fetch(url.toString())
-    if (res.status === 500) return all  // RTMS returns 500 for empty datasets
-    if (!res.ok) throw new Error(`RTMS ${res.status} [${service}/${lawdCd}/${dealYmd}]`)
+    if (!res.ok) throw new Error(`RTMS ${res.status} [${endpoint}/${lawdCd}/${dealYmd}]`)
     const data = await res.json()
+    const resultCode = data?.response?.header?.resultCode
+    if (resultCode && resultCode !== '00') {
+      throw new Error(`RTMS API error ${resultCode}: ${data?.response?.header?.resultMsg} [${endpoint}/${lawdCd}/${dealYmd}]`)
+    }
     const items = extractItems(data)
     all.push(...items)
     if (items.length < 1000) break
@@ -239,15 +242,14 @@ async function main() {
   let totalTxns  = 0
 
   const tasks = []
-  for (const { service, propType, dealCat } of SERVICES) {
+  for (const { endpoint, method, propType, dealCat } of SERVICES) {
     for (const ym of months) {
       for (const lawdCd of lawdCds) {
         tasks.push(async () => {
           try {
-            const items = await withRetry(() => fetchAllPages(service, lawdCd, ym))
+            const items = await withRetry(() => fetchAllPages(endpoint, method, lawdCd, ym))
             if (items.length === 0) return
 
-            // skip rows with no name (can't build a property key)
             const valid = items.filter(i => extractName(i))
 
             const propMap = new Map()
@@ -255,7 +257,7 @@ async function main() {
             for (const item of valid) {
               const prop = toProperty(item, lawdCd, propType)
               if (!propMap.has(prop.property_key)) propMap.set(prop.property_key, prop)
-              txns.push(toTransaction(item, lawdCd, ym, service, propType, dealCat))
+              txns.push(toTransaction(item, lawdCd, ym, method, propType, dealCat))
             }
 
             const keyToId = await upsertProperties(Array.from(propMap.values()))
@@ -272,7 +274,7 @@ async function main() {
               `\r props ${totalProps.toLocaleString()} | txns ${totalTxns.toLocaleString()}  `
             )
           } catch (err) {
-            console.error(`\n[ERR] ${service}/${ym}/${lawdCd}: ${err.message}`)
+            console.error(`\n[ERR] ${endpoint}/${ym}/${lawdCd}: ${err.message}`)
           }
         })
       }
