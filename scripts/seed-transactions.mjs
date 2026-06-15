@@ -84,12 +84,6 @@ async function fetchAllPages(endpoint, method, lawdCd, dealYmd) {
     if (resultCode && !['00', '000', '0000'].includes(resultCode)) {
       throw new Error(`RTMS API error ${resultCode}: ${data?.response?.header?.resultMsg} [${endpoint}/${lawdCd}/${dealYmd}]`)
     }
-    if (pageNo === 1) {
-      const totalCount = data?.response?.body?.totalCount
-      const rawItems = data?.response?.body?.items
-      const firstItem = rawItems?.item ? (Array.isArray(rawItems.item) ? rawItems.item[0] : rawItems.item) : null
-      console.log(`[DBG] ${endpoint}/${lawdCd}/${dealYmd} totalCount=${totalCount} itemsType=${typeof rawItems} firstItemKeys=${firstItem ? Object.keys(firstItem).join(',') : 'none'}`)
-    }
     const items = extractItems(data)
     all.push(...items)
     if (items.length < 1000) break
@@ -118,49 +112,49 @@ function propertyKey(lawdCd, name, type, buildYear) {
 }
 
 function extractName(item) {
-  return (item['아파트'] ?? item['단지명'] ?? item['연립다세대'] ?? '').trim()
+  return (item['aptNm'] ?? item['offiNm'] ?? item['mhouseNm'] ?? '').trim()
 }
 
 function toProperty(item, lawdCd, propType) {
   const name = extractName(item)
-  const buildYear = item['건축년도'] ? parseInt(item['건축년도']) : null
+  const buildYear = item['buildYear'] ? parseInt(item['buildYear']) : null
   return {
     property_key: propertyKey(lawdCd, name, propType, buildYear),
     type: propType,
     name,
     lawd_cd: lawdCd,
-    umd_nm:    item['법정동'] ?? null,
-    jibun:     item['지번'] ?? null,
-    bonbun:    item['법정동본번코드'] ?? null,
-    bubun:     item['법정동부번코드'] ?? null,
-    road_nm:   item['도로명'] ?? null,
+    umd_nm:    item['umdNm'] ?? null,
+    jibun:     item['jibun'] ?? null,
+    bonbun:    item['roadnmbonbun'] ?? null,
+    bubun:     item['roadnmbubun'] ?? null,
+    road_nm:   item['roadnm'] ?? null,
     build_year: buildYear,
-    apt_seq:   item['단지코드'] ?? null,
+    apt_seq:   item['aptSeq'] ?? null,
   }
 }
 
 function toTransaction(item, lawdCd, requestYm, service, propType, dealCat) {
   const name      = extractName(item)
-  const buildYear = item['건축년도'] ? parseInt(item['건축년도']) : null
+  const buildYear = item['buildYear'] ? parseInt(item['buildYear']) : null
   const pKey      = propertyKey(lawdCd, name, propType, buildYear)
-  const dealDate  = makeDealDate(item['년'], item['월'], item['일'])
-  const area      = item['전용면적'] ? parseFloat(item['전용면적']) : null
+  const dealDate  = makeDealDate(item['dealYear'], item['dealMonth'], item['dealDay'])
+  const area      = item['excluUseAr'] ? parseFloat(item['excluUseAr']) : null
   const areaStr   = area != null ? String(area) : ''
-  const floor     = item['층'] ? parseInt(item['층']) : null
+  const floor     = item['floor'] ? parseInt(item['floor']) : null
 
   let deal_kind, price = null, deposit = null, monthly_rent = null
 
   if (dealCat === 'trade') {
     deal_kind = 'trade'
-    price = parsePrice(item['거래금액'])
+    price = parsePrice(item['dealAmount'])
   } else {
-    deposit      = parsePrice(item['보증금액'] ?? item['보증금'] ?? '')
-    monthly_rent = parsePrice(item['월세금액'] ?? item['월세'] ?? '')
+    deposit      = parsePrice(item['deposit'] ?? '')
+    monthly_rent = parsePrice(item['monthlyRent'] ?? '')
     deal_kind    = monthly_rent > 0 ? 'monthly_rent' : 'jeonse'
   }
 
   return {
-    _property_key: pKey,  // resolved to property_id before DB insert
+    _property_key: pKey,
     deal_kind,
     area,
     floor,
@@ -169,19 +163,19 @@ function toTransaction(item, lawdCd, requestYm, service, propType, dealCat) {
     price,
     deposit,
     monthly_rent,
-    dealing_gbn:      item['거래유형'] ?? null,
-    contract_type:    item['계약구분'] ?? null,
-    contract_term:    item['계약기간'] ?? null,
-    use_rr_right:     item['갱신요구권사용'] ?? null,
-    prev_deposit:     item['종전계약보증금'] ? parsePrice(item['종전계약보증금']) : null,
-    prev_monthly_rent: item['종전계약월세']  ? parsePrice(item['종전계약월세'])  : null,
-    rgst_date:        item['등기일자'] ?? null,
-    buyer_gbn:        item['매수자'] ?? null,
-    seller_gbn:       item['매도자'] ?? null,
+    dealing_gbn:      item['dealingGbn'] ?? null,
+    contract_type:    item['contractType'] ?? item['cdealType'] ?? null,
+    contract_term:    item['contractTerm'] ?? null,
+    use_rr_right:     item['useRRRight'] ?? null,
+    prev_deposit:     item['preDeposit'] ? parsePrice(item['preDeposit']) : null,
+    prev_monthly_rent: item['preMonthlyRent'] ? parsePrice(item['preMonthlyRent']) : null,
+    rgst_date:        item['rgstDate'] ?? null,
+    buyer_gbn:        item['buyerGbn'] ?? null,
+    seller_gbn:       item['slerGbn'] ?? null,
     source_api:       service,
     source_hash:      makeHash(lawdCd, dealDate, name, areaStr, String(floor ?? ''),
                                String(price ?? deposit ?? 0),
-                               item['지번'] ?? item['법정동본번코드'] ?? ''),
+                               item['jibun'] ?? ''),
     raw_item:         item,
   }
 }
