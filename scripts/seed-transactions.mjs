@@ -15,7 +15,7 @@ const API_BASE = 'https://apis.data.go.kr/1613000'
 
 // Each RTMS service has its own endpoint path: /{ServiceName}/{methodName}
 const SERVICES = [
-  { endpoint: 'RTMSDataSvcAptTradeDev', method: 'getRTMSDataSvcAptTradeDev', propType: 'apartment', dealCat: 'trade' },
+  { endpoint: 'RTMSDataSvcAptTrade',    method: 'getRTMSDataSvcAptTrade',    propType: 'apartment', dealCat: 'trade' },
   { endpoint: 'RTMSDataSvcAptRent',     method: 'getRTMSDataSvcAptRent',     propType: 'apartment', dealCat: 'rent'  },
   { endpoint: 'RTMSDataSvcOffiTrade',   method: 'getRTMSDataSvcOffiTrade',   propType: 'officetel', dealCat: 'trade' },
   { endpoint: 'RTMSDataSvcOffiRent',    method: 'getRTMSDataSvcOffiRent',    propType: 'officetel', dealCat: 'rent'  },
