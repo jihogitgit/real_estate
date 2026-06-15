@@ -10,7 +10,7 @@ interface TradeRow {
   area: number | null
   floor: number | null
   price: number | null
-  apt_nm: string | null
+  complex_nm: string | null
 }
 
 async function getLawdCd(district: string): Promise<string | null> {
@@ -27,10 +27,11 @@ async function getLawdCd(district: string): Promise<string | null> {
 async function getNearbyTrades(lawdCd: string, aptNm: string): Promise<TradeRow[]> {
   const supabase = await createClient()
   const { data } = await supabase
-    .from('apt_trades')
-    .select('deal_date, area, floor, price, apt_nm')
+    .from('real_estate_transactions')
+    .select('deal_date, area, floor, price, complex_nm')
     .eq('lawd_cd', lawdCd)
-    .ilike('apt_nm', `%${aptNm}%`)
+    .eq('deal_kind', 'trade')
+    .ilike('complex_nm', `%${aptNm}%`)
     .order('deal_date', { ascending: false })
     .limit(10)
   return (data ?? []) as TradeRow[]
@@ -68,7 +69,7 @@ export default async function NearbyTransactionsWidget({ apartmentName, district
           <tbody>
             {trades.map((t, i) => (
               <tr key={i} className="border-b border-gray-50 last:border-0">
-                <td className="py-2 text-gray-700 max-w-[140px] truncate">{t.apt_nm ?? '-'}</td>
+                <td className="py-2 text-gray-700 max-w-[140px] truncate">{t.complex_nm ?? '-'}</td>
                 <td className="py-2 text-right text-gray-600">{t.area ? `${t.area}㎡` : '-'}</td>
                 <td className="py-2 text-right text-gray-600">{t.floor ? `${t.floor}층` : '-'}</td>
                 <td className="py-2 text-right font-medium text-blue-600">{formatPrice(t.price)}</td>
