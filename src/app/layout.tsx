@@ -2,8 +2,6 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
-import Header from '@/components/layout/Header'
-import Footer from '@/components/layout/Footer'
 import { AuthProvider } from '@/components/auth/AuthProvider'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -40,6 +38,10 @@ export default function RootLayout({
           src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_KEY}&autoload=false`}
           strategy="beforeInteractive"
         />
+        <Script
+          src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=ckd59ofa78&submodules=panorama"
+          strategy="afterInteractive"
+        />
 
         {process.env.NEXT_PUBLIC_ADSENSE_CLIENT && (
           <Script
@@ -63,9 +65,7 @@ export default function RootLayout({
         )}
 
         <AuthProvider>
-          <Header />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
+          {children}
         </AuthProvider>
       </body>
     </html>
