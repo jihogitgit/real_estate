@@ -89,11 +89,12 @@ export function Detail() {
   }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    seen(c.id)
-    RTMS.getTrades(c.id).then((t) => {
+    if (!id) return
+    seen(id)
+    RTMS.getTrades(id).then((t) => {
       setTrades(t.length ? t : genTrades(c))
     })
-  }, [c.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const area = c.areas[areaIdx] || c.areas[0]
   const filteredTrades = tradeTab === 0 ? trades : trades.filter((t) => t.deal === DEAL_TABS[tradeTab])
