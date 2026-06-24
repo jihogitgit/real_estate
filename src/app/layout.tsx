@@ -39,7 +39,7 @@ export default function RootLayout({
           strategy="beforeInteractive"
         />
         <Script
-          src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=ckd59ofa78&submodules=panorama"
+          src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=21jwcotkhm&submodules=panorama"
           strategy="afterInteractive"
         />
 
