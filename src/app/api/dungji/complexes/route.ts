@@ -148,11 +148,16 @@ function makeSupabase() {
   )
 }
 
+const NAME_TO_CODE: Record<string, string> = Object.fromEntries(
+  Object.entries(GU_MAP).map(([code, name]) => [name, code])
+)
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
-  const limit  = Math.min(parseInt(searchParams.get('limit') ?? '20'), 50)
-  const offset = parseInt(searchParams.get('offset') ?? '0')
-  const q      = searchParams.get('q') ?? ''
+  const limit   = Math.min(parseInt(searchParams.get('limit') ?? '20'), 50)
+  const offset  = parseInt(searchParams.get('offset') ?? '0')
+  const q       = searchParams.get('q') ?? ''
+  const regions = searchParams.get('regions') ?? ''
 
   const supabase = makeSupabase()
 
@@ -162,6 +167,13 @@ export async function GET(req: NextRequest) {
     .range(offset, offset + limit - 1)
 
   if (q) propQ = propQ.ilike('name', `%${q}%`)
+
+  if (regions) {
+    const codes = regions.split(',')
+      .map((r) => NAME_TO_CODE[r.trim()])
+      .filter(Boolean)
+    if (codes.length) propQ = propQ.in('lawd_cd', codes)
+  }
 
   const { data: properties, error: propErr } = await propQ
   if (propErr) return NextResponse.json({ error: propErr.message }, { status: 500 })
