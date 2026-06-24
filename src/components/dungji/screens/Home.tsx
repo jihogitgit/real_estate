@@ -71,8 +71,10 @@ export function Home() {
   const [q, setQ] = useState('')
   const [deal, setDeal] = useState(0)
   const [list, setList] = useState<Complex[]>(DB.complexes)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     RTMS.getComplexes({ regions: state.filters.regions }).then(setList)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -117,7 +119,7 @@ export function Home() {
         </div>
 
         {/* 최근 본 단지 */}
-        {state.recent.length > 0 && (
+        {mounted && state.recent.length > 0 && (
           <div style={{ marginBottom: 48 }}>
             <SectionHead title="최근 본 단지" />
             <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 4 }}>
