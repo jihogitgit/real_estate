@@ -7,22 +7,20 @@ const supabase = createClient(
 )
 
 const CONCURRENCY = 5
-const GEOCODE_URL = 'https://maps.apigw.ntruss.com/map-geocode/v2/geocode'
+const GEOCODE_URL = 'https://dapi.kakao.com/v2/local/search/keyword.json'
 
 async function geocode(property) {
   const query = [property.name, property.umd_nm].filter(Boolean).join(' ')
   const url = `${GEOCODE_URL}?query=${encodeURIComponent(query)}`
   const res = await fetch(url, {
     headers: {
-      'x-ncp-apigw-api-key-id': process.env.NAVER_CLIENT_ID,
-      'x-ncp-apigw-api-key': process.env.NAVER_CLIENT_SECRET,
-      'Accept': 'application/json',
+      Authorization: `KakaoAK ${process.env.KAKAO_REST_API_KEY}`,
     },
   })
   if (!res.ok) throw new Error(`HTTP ${res.status} for "${query}"`)
   const data = await res.json()
-  const addr = data.addresses?.[0]
-  return addr ? { lat: parseFloat(addr.y), lng: parseFloat(addr.x) } : null
+  const doc = data.documents?.[0]
+  return doc ? { lat: parseFloat(doc.y), lng: parseFloat(doc.x) } : null
 }
 
 async function processChunk(chunk) {
