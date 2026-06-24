@@ -99,7 +99,7 @@ function buildComplex(
   })
 
   const d1 = series[series.length - 2] > 0
-    ? parseFloat(((series[series.length - 1] - series[series.length - 2]) / series[series.length - 2] * 100).toFixed(1))
+    ? (parseFloat(((series[series.length - 1] - series[series.length - 2]) / series[series.length - 2] * 100).toFixed(1)) || 0)
     : 0
 
   const areasWithDelta = areas.map((a) => {
@@ -115,7 +115,7 @@ function buildComplex(
     }
     const prevAvg = avg(prevPrices), curAvg = avg(curPrices)
     const d = (prevAvg > 0 && curAvg > 0)
-      ? parseFloat(((curAvg - prevAvg) / prevAvg * 100).toFixed(1))
+      ? (parseFloat(((curAvg - prevAvg) / prevAvg * 100).toFixed(1)) || 0)
       : 0
     return { ...a, d }
   })

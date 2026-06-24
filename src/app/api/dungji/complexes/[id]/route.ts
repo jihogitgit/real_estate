@@ -124,7 +124,7 @@ export async function GET(
   })
 
   const d1 = series[series.length - 2] > 0
-    ? parseFloat(((series[series.length - 1] - series[series.length - 2]) / series[series.length - 2] * 100).toFixed(1))
+    ? (parseFloat(((series[series.length - 1] - series[series.length - 2]) / series[series.length - 2] * 100).toFixed(1)) || 0)
     : 0
 
   const guKey = String(p.lawd_cd ?? '').slice(0, 5)
