@@ -48,7 +48,7 @@ function avg(nums: number[]): number {
 
 function guName(lawdCd: string | number | null): string {
   const s = String(lawdCd ?? '').slice(0, 5)
-  return GU_MAP[s] ?? s
+  return GU_MAP[s] ?? GU_MAP[s.slice(0, 2)] ?? s
 }
 
 function buildComplex(
@@ -98,20 +98,27 @@ function buildComplex(
     return lastVal
   })
 
-  const d1 = series[series.length - 2] > 0
-    ? (parseFloat(((series[series.length - 1] - series[series.length - 2]) / series[series.length - 2] * 100).toFixed(1)) || 0)
-    : 0
+  // Compare last two months that have actual trade data (avoids forward-fill giving 0%)
+  const monthsWithData = months12.filter((mk) => (monthly.get(mk)?.length ?? 0) > 0)
+  let d1 = 0
+  if (monthsWithData.length >= 2) {
+    const prev = avg(monthly.get(monthsWithData[monthsWithData.length - 2])!)
+    const cur = avg(monthly.get(monthsWithData[monthsWithData.length - 1])!)
+    d1 = prev > 0 ? (parseFloat(((cur - prev) / prev * 100).toFixed(1)) || 0) : 0
+  }
 
   const areasWithDelta = areas.map((a) => {
-    const prevMonthBucketKey = months12[months12.length - 2]
-    const curMonthBucketKey = months12[months12.length - 1]
+    // Find last two months with actual data for this bucket
+    const bucketMonths = months12.filter((mk) => {
+      return trades.some((t) => bucket(Number(t.area ?? 0)).py === a.py && monthKey(String(t.deal_date ?? '')) === mk)
+    })
+    if (bucketMonths.length < 2) return { ...a, d: 0 }
     const prevPrices: number[] = [], curPrices: number[] = []
     for (const t of trades) {
-      const b = bucket(Number(t.area ?? 0))
-      if (b.py !== a.py) continue
+      if (bucket(Number(t.area ?? 0)).py !== a.py) continue
       const mk = monthKey(String(t.deal_date ?? ''))
-      if (mk === prevMonthBucketKey) prevPrices.push(Number(t.price ?? 0))
-      if (mk === curMonthBucketKey) curPrices.push(Number(t.price ?? 0))
+      if (mk === bucketMonths[bucketMonths.length - 2]) prevPrices.push(Number(t.price ?? 0))
+      if (mk === bucketMonths[bucketMonths.length - 1]) curPrices.push(Number(t.price ?? 0))
     }
     const prevAvg = avg(prevPrices), curAvg = avg(curPrices)
     const d = (prevAvg > 0 && curAvg > 0)
@@ -161,21 +168,52 @@ export async function GET(req: NextRequest) {
 
   const supabase = makeSupabase()
 
-  let propQ = supabase
-    .from('properties')
-    .select('id, name, type, lawd_cd, umd_nm, build_year, lat, lng, geocoded_at')
-    .range(offset, offset + limit - 1)
+  type PropRow = { id: number; name: string; type: string; lawd_cd: string; umd_nm: string; build_year: number; lat: number | null; lng: number | null; geocoded_at: string | null }
+  let properties: PropRow[] | null = null
+  let propErr: { message: string } | null = null
 
-  if (q) propQ = propQ.ilike('name', `%${q}%`)
+  if (q) {
+    const result = await supabase
+      .from('properties')
+      .select('id, name, type, lawd_cd, umd_nm, build_year, lat, lng, geocoded_at')
+      .ilike('name', `%${q}%`)
+      .range(offset, offset + limit - 1)
+    properties = result.data as PropRow[] | null
+    propErr = result.error
+  } else {
+    const cutoff90 = (() => {
+      const d = new Date(); d.setDate(d.getDate() - 90)
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    })()
 
-  if (regions) {
-    const codes = regions.split(',')
-      .map((r) => NAME_TO_CODE[r.trim()])
-      .filter(Boolean)
-    if (codes.length) propQ = propQ.in('lawd_cd', codes)
+    const regionCodes = regions
+      ? regions.split(',').map((r) => NAME_TO_CODE[r.trim()]).filter(Boolean)
+      : null
+
+    const { data: topTxns, error: rpcErr } = await supabase.rpc('get_top_traded_properties', {
+      cutoff_date: cutoff90,
+      row_limit: offset + limit,
+      lawd_codes: regionCodes ?? null,
+    })
+
+    if (rpcErr) return NextResponse.json({ error: rpcErr.message }, { status: 500 })
+
+    let propQ = supabase
+      .from('properties')
+      .select('id, name, type, lawd_cd, umd_nm, build_year, lat, lng, geocoded_at')
+
+    if (topTxns?.length) {
+      const topIds = (topTxns as { property_id: number }[]).slice(offset, offset + limit).map((r) => r.property_id)
+      propQ = propQ.in('id', topIds)
+    } else {
+      propQ = propQ.range(offset, offset + limit - 1)
+    }
+
+    const result = await propQ
+    properties = result.data as PropRow[] | null
+    propErr = result.error
   }
 
-  const { data: properties, error: propErr } = await propQ
   if (propErr) return NextResponse.json({ error: propErr.message }, { status: 500 })
   if (!properties?.length) return NextResponse.json([])
 

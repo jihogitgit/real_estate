@@ -23,9 +23,10 @@ function SectionHead({ title, sub, onAction, action = '전체보기' }: {
   )
 }
 
-function RankRow({ i, c }: { i: number; c: Complex }) {
+function RankRow({ i, c, deal }: { i: number; c: Complex; deal: number }) {
   const { nav, seen } = useStore()
   const top = c.areas[1] || c.areas[0]
+  const price = deal === 0 ? top.sale : top.jeonse
   return (
     <div onClick={() => { seen(c.id); nav('detail', { id: c.id }) }}
       style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 8px', cursor: 'pointer',
@@ -40,7 +41,7 @@ function RankRow({ i, c }: { i: number; c: Complex }) {
       </div>
       <Spark data={c.spark} color={c.d1 >= 0 ? T.up : T.down} />
       <div style={{ textAlign: 'right', minWidth: 96 }}>
-        <div style={{ fontSize: 15.5, fontWeight: 800, color: T.ink, fontVariantNumeric: 'tabular-nums' }}>{won(top.sale)}</div>
+        <div style={{ fontSize: 15.5, fontWeight: 800, color: T.ink, fontVariantNumeric: 'tabular-nums' }}>{won(price)}</div>
         <Delta pct={c.d1} size={12} />
       </div>
     </div>
@@ -145,7 +146,7 @@ export function Home() {
             <div style={{ fontSize: 19, fontWeight: 800, color: T.ink, letterSpacing: -0.5 }}>🔥 이번 주 실거래 HOT</div>
             <Seg items={['매매', '전세']} active={deal} onSel={setDeal} size="sm" />
           </div>
-          {ranked.map((c, i) => <RankRow key={c.id} i={i + 1} c={c} />)}
+          {ranked.map((c, i) => <RankRow key={c.id} i={i + 1} c={c} deal={deal} />)}
         </div>
       </div>
     </div>

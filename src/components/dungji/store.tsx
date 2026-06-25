@@ -160,6 +160,7 @@ type Action =
   | { type: 'SET_SETTING'; key: string; val: boolean }
   | { type: 'SET_FILTER'; patch: Partial<Filters> }
   | { type: 'SEARCH'; q: string }
+  | { type: 'HYDRATE'; p: Partial<AppState> }
 
 function reducer(s: AppState, a: Action): AppState {
   switch (a.type) {
@@ -188,6 +189,14 @@ function reducer(s: AppState, a: Action): AppState {
     case 'SET_SETTING': return { ...s, settings: { ...s.settings, [a.key]: a.val } }
     case 'SET_FILTER': return { ...s, filters: { ...s.filters, ...a.patch } }
     case 'SEARCH': return { ...s, search: a.q }
+    case 'HYDRATE': return {
+      ...s,
+      favs: (a.p.favs as string[]) ?? s.favs,
+      recent: (a.p.recent as string[]) ?? s.recent,
+      alarms: (a.p.alarms as string[]) ?? s.alarms,
+      auth: (a.p.auth as Auth) ?? s.auth,
+      settings: (a.p.settings as AppState['settings']) ?? s.settings,
+    }
     default: return s
   }
 }
@@ -203,15 +212,14 @@ function savePersist(p: object) {
 }
 
 function makeInitial(): AppState {
-  const p = loadPersist()
   return {
     route: { screen: 'home', params: {} },
     stack: [],
-    favs: (p.favs as string[]) || [],
-    recent: (p.recent as string[]) || [],
-    alarms: (p.alarms as string[]) || [],
-    auth: (p.auth as Auth) || { in: false, name: '', gajeom: 64, noHouse: 12, depend: 2, period: 15 },
-    settings: (p.settings as AppState['settings']) || { priceAlert: true, cheongAlert: true, aucAlert: false, weekly: true },
+    favs: [],
+    recent: [],
+    alarms: [],
+    auth: { in: false, name: '', gajeom: 64, noHouse: 12, depend: 2, period: 15 },
+    settings: { priceAlert: true, cheongAlert: true, aucAlert: false, weekly: true },
     filters: { deal: 'sale', sort: 'rtms', priceMax: null, areaType: 'all', regions: ['강남구', '서초구', '송파구'] },
     search: '',
   }
@@ -239,6 +247,11 @@ const StoreCtx = createContext<StoreAPI | null>(null)
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, makeInitial)
   const scroller = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const p = loadPersist()
+    if (Object.keys(p).length) dispatch({ type: 'HYDRATE', p })
+  }, [])
 
   useEffect(() => {
     savePersist({ favs: state.favs, recent: state.recent, alarms: state.alarms, auth: state.auth, settings: state.settings })

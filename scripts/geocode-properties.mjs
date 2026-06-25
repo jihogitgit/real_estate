@@ -44,6 +44,7 @@ async function processChunk(chunk) {
 
 async function main() {
   const resetId = process.argv.find((a) => a.startsWith('--reset-id='))?.split('=')[1]
+  const lawdCdArg = process.argv.find((a) => a.startsWith('--lawd-cd='))?.split('=')[1]
 
   if (resetId) {
     const { error } = await supabase
@@ -55,11 +56,30 @@ async function main() {
     return
   }
 
-  const { data: properties, error } = await supabase
-    .from('properties')
-    .select('id, name, umd_nm')
-    .is('geocoded_at', null)
-    .order('id')
+  const PAGE = 1000
+  let all = []
+  let from = 0
+  const codes = lawdCdArg ? lawdCdArg.split(',').map((s) => s.trim()) : null
+  if (codes) console.log(`Filtering by lawd_cd: ${codes.join(', ')}`)
+
+  while (true) {
+    let q = supabase
+      .from('properties')
+      .select('id, name, umd_nm')
+      .is('geocoded_at', null)
+      .order('id')
+      .range(from, from + PAGE - 1)
+    if (codes) q = q.in('lawd_cd', codes)
+    const { data, error } = await q
+    if (error) throw error
+    if (!data?.length) break
+    all = all.concat(data)
+    if (data.length < PAGE) break
+    from += PAGE
+  }
+
+  const properties = all
+  const error = null
 
   if (error) throw error
   console.log(`Found ${properties.length} ungeocoded properties`)

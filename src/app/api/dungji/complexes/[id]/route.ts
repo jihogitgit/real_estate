@@ -123,9 +123,13 @@ export async function GET(
     return lastVal
   })
 
-  const d1 = series[series.length - 2] > 0
-    ? (parseFloat(((series[series.length - 1] - series[series.length - 2]) / series[series.length - 2] * 100).toFixed(1)) || 0)
-    : 0
+  const monthsWithData = months12.filter((mk) => (monthly.get(mk)?.length ?? 0) > 0)
+  let d1 = 0
+  if (monthsWithData.length >= 2) {
+    const prev = avg(monthly.get(monthsWithData[monthsWithData.length - 2])!)
+    const cur = avg(monthly.get(monthsWithData[monthsWithData.length - 1])!)
+    d1 = prev > 0 ? (parseFloat(((cur - prev) / prev * 100).toFixed(1)) || 0) : 0
+  }
 
   const guKey = String(p.lawd_cd ?? '').slice(0, 5)
 

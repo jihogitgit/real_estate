@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { T, Icon, Logo, Tag, won } from '../ds'
 import { useStore, DB } from '../store'
 import type { Complex } from '../store'
+import NaverPanorama from '../NaverPanorama'
 
 const NAVS = [
   { k: 'home', label: '홈' },
@@ -90,11 +91,14 @@ export function CCard({ c, w = 240 }: { c: Complex; w?: number }) {
       onMouseEnter={(e) => { e.currentTarget.style.boxShadow = T.shadow; e.currentTarget.style.transform = 'translateY(-2px)' }}
       onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}>
       <div style={{ position: 'relative', height: 140, background: '#E9EEF3', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 6 }}>
+        {c.xy !== null
+          ? <NaverPanorama lat={c.xy[0]} lng={c.xy[1]} h={140} />
+          : null}
+        <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 6, zIndex: 1 }}>
           <Tag color="#fff" bg="rgba(25,31,40,.62)">{c.type}</Tag>
           {c.rankd > 0 && c.rankd <= 5 && <Tag color="#fff" bg="rgba(240,68,82,.92)">실거래 {c.rankd}위</Tag>}
         </div>
-        <div style={{ position: 'absolute', top: 10, right: 10 }}><FavBtn id={c.id} float /></div>
+        <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 1 }}><FavBtn id={c.id} float /></div>
       </div>
       <div style={{ padding: 16 }}>
         <div style={{ fontSize: 12, color: T.ink3, fontWeight: 600 }}>{c.gu} {c.dong} · {c.built}년</div>
