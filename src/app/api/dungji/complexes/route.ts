@@ -134,7 +134,7 @@ function buildComplex(
     dong: String(p.umd_nm ?? ''),
     code: String(p.lawd_cd ?? ''),
     built: Number(p.build_year ?? 0),
-    hh: null,
+    hh: p.total_units != null ? Number(p.total_units) : null,
     type: String(p.type ?? '아파트'),
     d1,
     rankd,
@@ -175,7 +175,7 @@ export async function GET(req: NextRequest) {
   if (q) {
     const result = await supabase
       .from('properties')
-      .select('id, name, type, lawd_cd, umd_nm, build_year, lat, lng, geocoded_at')
+      .select('id, name, type, lawd_cd, umd_nm, build_year, total_units, lat, lng, geocoded_at')
       .ilike('name', `%${q}%`)
       .range(offset, offset + limit - 1)
     properties = result.data as PropRow[] | null
@@ -200,7 +200,7 @@ export async function GET(req: NextRequest) {
 
     let propQ = supabase
       .from('properties')
-      .select('id, name, type, lawd_cd, umd_nm, build_year, lat, lng, geocoded_at')
+      .select('id, name, type, lawd_cd, umd_nm, build_year, total_units, lat, lng, geocoded_at')
 
     if (topTxns?.length) {
       const topIds = (topTxns as { property_id: number }[]).slice(offset, offset + limit).map((r) => r.property_id)

@@ -57,7 +57,7 @@ export async function GET(
 
   const { data: p, error: propErr } = await supabase
     .from('properties')
-    .select('id, name, type, lawd_cd, umd_nm, build_year, lat, lng, geocoded_at')
+    .select('id, name, type, lawd_cd, umd_nm, build_year, total_units, lat, lng, geocoded_at')
     .eq('id', id)
     .single()
 
@@ -140,7 +140,7 @@ export async function GET(
     dong: String(p.umd_nm ?? ''),
     code: String(p.lawd_cd ?? ''),
     built: Number(p.build_year ?? 0),
-    hh: null,
+    hh: (p as Record<string, unknown>).total_units != null ? Number((p as Record<string, unknown>).total_units) : null,
     type: String(p.type ?? '아파트'),
     d1,
     rankd: -1,
