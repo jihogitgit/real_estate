@@ -28,7 +28,7 @@ const DELAY_MS = 300
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
 
 async function fetchUnits(kaptCode) {
-  const url = new URL('https://apis.data.go.kr/1613000/AptBasisInfoServiceV4/getAphusDtlInfoV4')
+  const url = new URL('https://apis.data.go.kr/1613000/AptBasisInfoServiceV4/getAphusBassInfoV4')
   url.searchParams.set('serviceKey', API_KEY)
   url.searchParams.set('kaptCode', kaptCode)
   url.searchParams.set('_type', 'json')
@@ -41,8 +41,8 @@ async function fetchUnits(kaptCode) {
   const item = data?.response?.body?.item
   if (!item) return null
 
-  // kaptFacelt = 총 세대수, kaptMajunho = 주거 세대수 (fallback)
-  const raw = item.kaptFacelt ?? item.kaptMajunho ?? null
+  // hoCnt = 총 세대수
+  const raw = item.hoCnt ?? null
   return raw ? parseInt(String(raw).replace(/,/g, ''), 10) : null
 }
 
