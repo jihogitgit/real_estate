@@ -34,7 +34,6 @@ function RankRow({ i, c, deal }: { i: number; c: Complex; deal: number }) {
       onMouseEnter={(e) => (e.currentTarget.style.background = T.cardAlt)}
       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
       <span style={{ width: 22, textAlign: 'center', fontSize: 16, fontWeight: 800, color: i <= 3 ? T.primary : T.ink3, fontVariantNumeric: 'tabular-nums' }}>{i}</span>
-      <Ph label="" w={44} h={44} r={11} tone="#E9EEF3" />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 15, fontWeight: 700, color: T.ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: -0.3 }}>{c.name}</div>
         <div style={{ fontSize: 12.5, color: T.ink3, fontWeight: 500 }}>{c.gu} {c.dong} · 전용 {top.ex}㎡</div>
