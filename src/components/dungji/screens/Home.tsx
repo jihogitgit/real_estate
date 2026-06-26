@@ -124,8 +124,9 @@ export function Home() {
             <SectionHead title="최근 본 단지" />
             <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 4 }}>
               {state.recent
-                .map((id) => DB.complexes.find((c) => c.id === id))
+                .map((id) => list.find((c) => c.id === id))
                 .filter((c): c is Complex => !!c)
+                .slice(0, 5)
                 .map((c) => <CCard key={c.id} c={c} w={220} />)}
             </div>
           </div>
