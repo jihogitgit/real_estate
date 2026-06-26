@@ -1,6 +1,5 @@
-// src/components/dungji/NaverPanorama.tsx
 'use client'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 declare global {
   interface Window {
@@ -23,19 +22,34 @@ interface Props {
 }
 
 export default function NaverPanorama({ lat, lng, h = 200 }: Props) {
-  const ref = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const panoRef = useRef<{ destroy?: () => void } | null>(null)
+  const [visible, setVisible] = useState(false)
+
+  // 뷰포트에 들어올 때만 초기화
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect() } },
+      { rootMargin: '100px' }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
+    if (!visible) return
+    let cancelled = false
     let attempts = 0
     const tryInit = () => {
-      if (!ref.current) return
+      if (cancelled || !containerRef.current) return
       if (!window.naver?.maps?.Panorama) {
         if (++attempts < 20) setTimeout(tryInit, 500)
         return
       }
       try {
-        panoRef.current = new window.naver.maps.Panorama(ref.current, {
+        panoRef.current = new window.naver.maps.Panorama(containerRef.current, {
           position: new window.naver.maps.LatLng(lat, lng),
           pov: { pan: 0, tilt: 0, zoom: 1 },
         })
@@ -45,15 +59,13 @@ export default function NaverPanorama({ lat, lng, h = 200 }: Props) {
     }
     tryInit()
     return () => {
+      cancelled = true
       panoRef.current?.destroy?.()
       panoRef.current = null
     }
-  }, [lat, lng])
+  }, [visible, lat, lng])
 
   return (
-    <div
-      ref={ref}
-      style={{ width: '100%', height: h, background: '#d1d9e0' }}
-    />
+    <div ref={containerRef} style={{ width: '100%', height: h, background: '#d1d9e0' }} />
   )
 }
