@@ -1,13 +1,13 @@
 // scripts/fetch-apt-units.mjs
-// 공공데이터포털 "아파트 기본정보 제공 서비스" (AptBasisInfoService1)를 사용해
-// properties.apt_seq 기준으로 총 세대수(total_units)를 수집합니다.
+// AptBasisInfoServiceV4/getAphusDtlInfoV4 를 사용해 세대수(total_units)를 수집합니다.
 //
 // 사전 준비:
-//   data.go.kr → "아파트 기본정보 제공 서비스" 검색 → 활용신청
-//   (동일한 CHEONGAHK_API_KEY에 권한이 추가됩니다. 승인 후 실행하세요.)
+//   1. scripts/fetch-kapt-codes.mjs 를 먼저 실행해 properties.kapt_code 를 채우세요.
+//   2. data.go.kr → "전국공동주택표준데이터" (서비스ID: 15096285) 활용신청 → 승인 후 실행하세요.
+//      (동일한 CHEONGAHK_API_KEY 에 권한이 추가됩니다.)
 //
 // 실행:
-//   node --env-file=.env.local scripts/fetch-apt-units.mjs
+//   env $(cat .env.local | grep -v '^#' | xargs) node scripts/fetch-apt-units.mjs
 
 import { createClient } from '@supabase/supabase-js'
 
@@ -27,30 +27,31 @@ const DELAY_MS = 300
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
 
-async function fetchUnits(aptSeq) {
-  const url = new URL('https://apis.data.go.kr/1613000/AptBasisInfoService1/getAptBasisInfo1')
+async function fetchUnits(kaptCode) {
+  const url = new URL('https://apis.data.go.kr/1613000/AptBasisInfoServiceV4/getAphusDtlInfoV4')
   url.searchParams.set('serviceKey', API_KEY)
-  url.searchParams.set('kaptCode', aptSeq)
+  url.searchParams.set('kaptCode', kaptCode)
   url.searchParams.set('_type', 'json')
 
-  const res = await fetch(url.toString())
+  const res = await fetch(url.toString(), { headers: { 'User-Agent': 'Mozilla/5.0' } })
+  if (res.status === 403) throw new Error('403 Forbidden — "전국공동주택표준데이터" 서비스 활용신청이 필요합니다.')
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const data = await res.json()
 
   const item = data?.response?.body?.item
   if (!item) return null
 
-  // kaptFacelt = 단지 전체 세대수
-  const units = item.kaptFacelt ?? item.kaptMajunho ?? null
-  return units ? parseInt(String(units).replace(/,/g, ''), 10) : null
+  // kaptFacelt = 총 세대수, kaptMajunho = 주거 세대수 (fallback)
+  const raw = item.kaptFacelt ?? item.kaptMajunho ?? null
+  return raw ? parseInt(String(raw).replace(/,/g, ''), 10) : null
 }
 
 async function processChunk(chunk) {
   for (const row of chunk) {
     try {
-      const units = await fetchUnits(row.apt_seq)
+      const units = await fetchUnits(row.kapt_code)
       if (units === null) {
-        console.log(`  SKIP  ${row.name} (${row.apt_seq}) — 데이터 없음`)
+        console.log(`  SKIP  ${row.name} (${row.kapt_code}) — 데이터 없음`)
         continue
       }
       const { error } = await supabase
@@ -58,25 +59,25 @@ async function processChunk(chunk) {
         .update({ total_units: units })
         .eq('id', row.id)
       if (error) throw error
-      console.log(`  OK    ${row.name} (${row.apt_seq}) → ${units.toLocaleString()}세대`)
+      console.log(`  OK    ${row.name} (${row.kapt_code}) → ${units.toLocaleString()}세대`)
     } catch (err) {
-      console.error(`  ERR   ${row.name} (${row.apt_seq}): ${err.message}`)
+      console.error(`  ERR   ${row.name} (${row.kapt_code}): ${err.message}`)
+      if (err.message.includes('403')) process.exit(1)
     }
     await sleep(DELAY_MS)
   }
 }
 
 async function main() {
-  // total_units 없는 단지만 처리
   const { data: rows, error } = await supabase
     .from('properties')
-    .select('id, name, apt_seq')
-    .not('apt_seq', 'is', null)
+    .select('id, name, kapt_code')
+    .not('kapt_code', 'is', null)
     .is('total_units', null)
     .order('id')
 
   if (error) { console.error(error.message); process.exit(1) }
-  if (!rows?.length) { console.log('수집할 단지가 없습니다.'); return }
+  if (!rows?.length) { console.log('수집할 단지가 없습니다. 먼저 fetch-kapt-codes.mjs 를 실행하세요.'); return }
 
   console.log(`총 ${rows.length}개 단지 세대수 수집 시작...`)
 
