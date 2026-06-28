@@ -68,26 +68,42 @@ async function processChunk(chunk) {
   }
 }
 
-async function main() {
-  const { data: rows, error } = await supabase
-    .from('properties')
-    .select('id, name, kapt_code')
-    .not('kapt_code', 'is', null)
-    .is('total_units', null)
-    .order('id')
+async function fetchAllProps() {
+  const all = []
+  let from = 0
+  const PAGE = 1000
+  while (true) {
+    const { data, error } = await supabase
+      .from('properties')
+      .select('id, name, kapt_code')
+      .not('kapt_code', 'is', null)
+      .is('total_units', null)
+      .order('id')
+      .range(from, from + PAGE - 1)
+    if (error) { console.error(error.message); process.exit(1) }
+    if (!data?.length) break
+    all.push(...data)
+    if (data.length < PAGE) break
+    from += PAGE
+  }
+  return all
+}
 
-  if (error) { console.error(error.message); process.exit(1) }
-  if (!rows?.length) { console.log('수집할 단지가 없습니다. 먼저 fetch-kapt-codes.mjs 를 실행하세요.'); return }
+async function main() {
+  process.stdout.write('수집 대상 조회 중...\r')
+  const rows = await fetchAllProps()
+
+  if (!rows.length) { console.log('수집할 단지가 없습니다. 먼저 fetch-kapt-codes.mjs 를 실행하세요.'); return }
 
   console.log(`총 ${rows.length}개 단지 세대수 수집 시작...`)
 
   for (let i = 0; i < rows.length; i += CONCURRENCY) {
     const chunk = rows.slice(i, i + CONCURRENCY)
     await processChunk(chunk)
-    console.log(`진행: ${Math.min(i + CONCURRENCY, rows.length)}/${rows.length}`)
+    process.stdout.write(`진행: ${Math.min(i + CONCURRENCY, rows.length)}/${rows.length}\r`)
   }
 
-  console.log('완료!')
+  console.log('\n완료!')
 }
 
 main()

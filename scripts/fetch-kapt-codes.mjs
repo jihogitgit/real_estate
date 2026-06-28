@@ -18,12 +18,12 @@ if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_
   process.exit(1)
 }
 
-const PAGE_SIZE = 100
+const KAPT_PAGE_SIZE = 100
+const DB_PAGE_SIZE = 1000
 const DELAY_MS = 200
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
 
-// 이름 정규화: 공백·특수문자 제거, 소문자, "단지" 접미사 제거
 function norm(s) {
   return String(s ?? '')
     .replace(/\s+/g, '')
@@ -38,11 +38,11 @@ function isSimilar(a, b) {
   return na === nb || na.startsWith(nb) || nb.startsWith(na) || na.includes(nb) || nb.includes(na)
 }
 
-async function fetchPage(pageNo) {
+async function fetchKaptPage(pageNo) {
   const url = new URL('https://apis.data.go.kr/1613000/AptListService3/getTotalAptList3')
   url.searchParams.set('serviceKey', API_KEY)
   url.searchParams.set('pageNo', pageNo)
-  url.searchParams.set('numOfRows', PAGE_SIZE)
+  url.searchParams.set('numOfRows', KAPT_PAGE_SIZE)
   url.searchParams.set('_type', 'json')
 
   const res = await fetch(url.toString(), { headers: { 'User-Agent': 'Mozilla/5.0' } })
@@ -54,14 +54,14 @@ async function fetchPage(pageNo) {
 
 async function downloadAllKapt() {
   console.log('K-APT 전국 단지 목록 다운로드 중...')
-  const { items: first, total } = await fetchPage(1)
-  const totalPages = Math.ceil(total / PAGE_SIZE)
+  const { items: first, total } = await fetchKaptPage(1)
+  const totalPages = Math.ceil(total / KAPT_PAGE_SIZE)
   console.log(`총 ${total.toLocaleString()}개 단지, ${totalPages}페이지`)
 
   const all = [...first]
   for (let p = 2; p <= totalPages; p++) {
     await sleep(DELAY_MS)
-    const { items } = await fetchPage(p)
+    const { items } = await fetchKaptPage(p)
     all.push(...items)
     if (p % 20 === 0) process.stdout.write(`  ${p}/${totalPages} (${all.length}건)\r`)
   }
@@ -69,12 +69,37 @@ async function downloadAllKapt() {
   return all
 }
 
+async function fetchAllProps() {
+  console.log('DB 단지 목록 전체 조회 중...')
+  const all = []
+  let from = 0
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('properties')
+      .select('id, name, lawd_cd')
+      .is('kapt_code', null)
+      .not('lawd_cd', 'is', null)
+      .order('id')
+      .range(from, from + DB_PAGE_SIZE - 1)
+
+    if (error) { console.error(error.message); process.exit(1) }
+    if (!data?.length) break
+    all.push(...data)
+    process.stdout.write(`  ${all.length}건 조회됨\r`)
+    if (data.length < DB_PAGE_SIZE) break
+    from += DB_PAGE_SIZE
+  }
+
+  console.log(`\nDB 단지 총 ${all.length}건`)
+  return all
+}
+
 async function main() {
   // 1. K-APT 전국 목록 다운로드
   const kaptList = await downloadAllKapt()
 
-  // 2. 시군구코드(5자리) 기준 인덱스 생성
-  // bjdCode는 10자리 법정동코드, 앞 5자리가 시군구코드
+  // 2. 시군구코드(5자리) 기준 인덱스
   const byGu = new Map()
   for (const k of kaptList) {
     const guCode = String(k.bjdCode ?? '').slice(0, 5)
@@ -82,61 +107,61 @@ async function main() {
     byGu.get(guCode).push(k)
   }
 
-  // 3. DB 단지 목록 조회 (kapt_code 없는 것만)
-  const { data: props, error } = await supabase
-    .from('properties')
-    .select('id, name, lawd_cd')
-    .is('kapt_code', null)
-    .not('lawd_cd', 'is', null)
-    .order('id')
+  // 3. DB 전체 조회 (페이지네이션)
+  const props = await fetchAllProps()
 
-  if (error) { console.error(error.message); process.exit(1) }
-  if (!props?.length) { console.log('매핑할 단지가 없습니다.'); return }
-
-  console.log(`\nDB 단지 ${props.length}개 매핑 시작...`)
-
-  let matched = 0, skipped = 0, ambiguous = 0
+  // 4. 인메모리 매칭 — kapt_code별로 id 묶기
+  console.log('\n매칭 중...')
+  const matchMap = new Map()  // kaptCode → id[]
+  let skipped = 0, ambiguous = 0
 
   for (const prop of props) {
     const guCode = String(prop.lawd_cd ?? '').slice(0, 5)
     const candidates = byGu.get(guCode) ?? []
-
     const hits = candidates.filter(k => isSimilar(prop.name, k.kaptName))
 
-    if (hits.length === 0) {
-      console.log(`  MISS  ${prop.name} (${guCode}) — 매칭 없음`)
-      skipped++
-      continue
-    }
+    if (hits.length === 0) { skipped++; continue }
 
     if (hits.length > 1) {
-      // 완전 일치 우선
       const exact = hits.find(k => norm(k.kaptName) === norm(prop.name))
       if (exact) {
         hits.splice(0, hits.length, exact)
       } else {
-        console.log(`  AMB   ${prop.name} (${guCode}) — ${hits.length}개 후보: ${hits.map(h => h.kaptName).join(', ')}`)
         ambiguous++
         continue
       }
     }
 
-    const { kaptCode, kaptName } = hits[0]
-    const { error: upErr } = await supabase
-      .from('properties')
-      .update({ kapt_code: kaptCode })
-      .eq('id', prop.id)
-
-    if (upErr) {
-      console.error(`  ERR   ${prop.name}: ${upErr.message}`)
-    } else {
-      console.log(`  OK    ${prop.name} → ${kaptCode} (${kaptName})`)
-      matched++
-    }
+    const { kaptCode } = hits[0]
+    if (!matchMap.has(kaptCode)) matchMap.set(kaptCode, [])
+    matchMap.get(kaptCode).push(prop.id)
   }
 
-  console.log(`\n완료: 매칭 ${matched}건 / 미매칭 ${skipped}건 / 모호 ${ambiguous}건`)
-  console.log('세대수 수집은 AptBasisInfoServiceV4 승인 후 fetch-apt-units.mjs 를 실행하세요.')
+  const totalMatched = [...matchMap.values()].reduce((s, ids) => s + ids.length, 0)
+  console.log(`매칭 완료: ${totalMatched}건 / 미매칭 ${skipped}건 / 모호 ${ambiguous}건`)
+  console.log(`고유 kaptCode: ${matchMap.size}개 → DB 업데이트 시작...`)
+
+  // 5. 배치 업데이트 (kapt_code별로 in() 사용)
+  let updated = 0
+  const entries = [...matchMap.entries()]
+  for (let i = 0; i < entries.length; i++) {
+    const [kaptCode, ids] = entries[i]
+    const { error } = await supabase
+      .from('properties')
+      .update({ kapt_code: kaptCode })
+      .in('id', ids)
+
+    if (error) {
+      console.error(`ERR ${kaptCode}: ${error.message}`)
+    } else {
+      updated += ids.length
+    }
+
+    if ((i + 1) % 100 === 0) process.stdout.write(`  ${i + 1}/${entries.length} kaptCode 처리 (${updated}건 업데이트)\r`)
+  }
+
+  console.log(`\n업데이트 완료: ${updated}건`)
+  console.log('세대수 수집은 fetch-apt-units.mjs 를 실행하세요.')
 }
 
 main()
