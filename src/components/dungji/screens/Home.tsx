@@ -4,6 +4,7 @@ import { T, Icon, Tag, Delta, Spark, Seg, Ph, won } from '../ds'
 import { useStore, DB, RTMS } from '../store'
 import type { Complex } from '../store'
 import { CCard, Empty, FavBtn } from './Nav'
+import { RecommendSection } from '@/components/recommend/RecommendSection'
 
 function SectionHead({ title, sub, onAction, action = '전체보기' }: {
   title: string; sub?: string; onAction?: () => void; action?: string
@@ -117,6 +118,8 @@ export function Home() {
           <CatTile icon="chart" label="실거래가" sub="매매·전월세 시세" color={T.sil} soft={T.silSoft} onClick={() => nav('sil')} />
           <CatTile icon="map" label="지도매물" sub="지도로 둘러보기" color={T.primary} soft={T.primarySoft} onClick={() => nav('map')} />
         </div>
+
+        <RecommendSection />
 
         {/* 최근 본 단지 */}
         {mounted && state.recent.length > 0 && (
