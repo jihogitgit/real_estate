@@ -11,16 +11,19 @@ function sb() {
   )
 }
 
-function cutoff() {
-  const d = new Date()
-  d.setFullYear(d.getFullYear() - 1)
-  return d.toISOString().slice(0, 10)
+function cutoff(): string {
+  const now = new Date()
+  // UTC arithmetic matches toISOString() output; avoids KST+9 date-slip on local setFullYear
+  return new Date(Date.UTC(now.getUTCFullYear() - 1, now.getUTCMonth(), now.getUTCDate()))
+    .toISOString()
+    .slice(0, 10)
 }
 
 type AggRow = { lawd_cd: string; avg_price: number; cnt: number }
 type TradeRow = { lawd_cd: string; apt_nm: string | null; area: number | null; price: number; deal_date: string }
 type RentRow  = { lawd_cd: string; apt_nm: string | null; area: number | null; deposit: number; deal_date: string }
 
+// 6 trades per region × up to 50 regions = 300 outer limit covers all buckets without over-fetching
 function groupByRegion<T extends { lawd_cd: string }>(rows: T[], cds: string[]): Map<string, T[]> {
   const map = new Map<string, T[]>(cds.map(cd => [cd, []]))
   for (const row of rows) {
@@ -30,7 +33,7 @@ function groupByRegion<T extends { lawd_cd: string }>(rows: T[], cds: string[]):
   return map
 }
 
-const _tradeStats = async (): Promise<RegionStat[]> => {
+const fetchTradeStats = async (): Promise<RegionStat[]> => {
   const client = sb()
   const cut = cutoff()
 
@@ -65,7 +68,7 @@ const _tradeStats = async (): Promise<RegionStat[]> => {
   }))
 }
 
-const _jeonseStats = async (): Promise<RegionStat[]> => {
+const fetchJeonseStats = async (): Promise<RegionStat[]> => {
   const client = sb()
   const cut = cutoff()
 
@@ -100,8 +103,8 @@ const _jeonseStats = async (): Promise<RegionStat[]> => {
   }))
 }
 
-const getTradeStats  = unstable_cache(_tradeStats,  ['region-trade-stats'],  { revalidate: 86400 })
-const getJeonseStats = unstable_cache(_jeonseStats, ['region-jeonse-stats'], { revalidate: 86400 })
+const getTradeStats  = unstable_cache(fetchTradeStats,  ['region-trade-stats'],  { revalidate: 86400 })
+const getJeonseStats = unstable_cache(fetchJeonseStats, ['region-jeonse-stats'], { revalidate: 86400 })
 
 export const runtime = 'nodejs'
 
@@ -116,6 +119,6 @@ export async function GET(request: Request) {
     return NextResponse.json(stats)
   } catch (err) {
     console.error('[region-stats]', err)
-    return NextResponse.json({ error: String(err) }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
