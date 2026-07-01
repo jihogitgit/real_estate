@@ -57,7 +57,6 @@ export function LoanCalculatorModal({ dealType, onApply, onClose }: Props) {
       <div style={{ width: '100%', maxWidth: 480, background: '#fff', borderRadius: 20,
         padding: 28, boxShadow: T.shadowLg, maxHeight: '90vh', overflowY: 'auto' }}>
 
-        {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: T.ink, letterSpacing: -0.5 }}>
             대출 한도 확인
@@ -68,7 +67,6 @@ export function LoanCalculatorModal({ dealType, onApply, onClose }: Props) {
           </button>
         </div>
 
-        {/* Tab */}
         <div style={{ display: 'flex', gap: 4, background: T.bg, borderRadius: 10, padding: 4, marginBottom: 20 }}>
           {(['gov', 'general'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
@@ -130,8 +128,8 @@ export function LoanCalculatorModal({ dealType, onApply, onClose }: Props) {
               { label: '금리 (%)',      key: 'rate'   as const },
               { label: '상환기간 (년)', key: 'term'   as const },
             ].map(({ label, key }) => {
-              const map = { income: [income, setIncome, 100, 0] as const, rate: [rate, setRate, 0.1, 0.1] as const, term: [term, setTerm, 1, 1] as const }
-              const [val, setter, step, min] = map[key]
+              const fieldMap = { income: [income, setIncome, 100, 0] as const, rate: [rate, setRate, 0.1, 0.1] as const, term: [term, setTerm, 1, 1] as const }
+              const [val, setter, step, min] = fieldMap[key]
               return (
                 <div key={key} style={{ marginBottom: 14 }}>
                   <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: T.ink3, marginBottom: 6 }}>
@@ -148,12 +146,14 @@ export function LoanCalculatorModal({ dealType, onApply, onClose }: Props) {
 
             <Button kind="line" full onClick={handleCalc}>계산하기</Button>
 
-            {result !== null && (
+            {result !== null && result > 0 && (
               <div style={{ marginTop: 18, padding: 18, background: T.primarySoft, borderRadius: 14, textAlign: 'center' }}>
                 <div style={{ fontSize: 13, color: T.ink3, marginBottom: 6 }}>최대 대출 한도</div>
                 <div style={{ fontSize: 28, fontWeight: 800, color: T.primary, letterSpacing: -1 }}>
                   {result >= 10000
-                    ? `${Math.floor(result / 10000)}억 ${(result % 10000 > 0 ? (result % 10000).toLocaleString() + '만' : '')}`
+                    ? result % 10000 === 0
+                      ? `${Math.floor(result / 10000)}억`
+                      : `${Math.floor(result / 10000)}억 ${(result % 10000).toLocaleString()}만`
                     : `${result.toLocaleString()}만원`}
                 </div>
                 <div style={{ marginTop: 14 }}>
