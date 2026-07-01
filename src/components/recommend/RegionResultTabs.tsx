@@ -44,7 +44,6 @@ export function RegionResultTabs({ stats, budget, dealType }: Props) {
 
   return (
     <div>
-      {/* 지역 탭 스크롤: overflow-x auto + scrollbar hidden */}
       <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6, marginBottom: 16, scrollbarWidth: 'none' }}>
         {filtered.map((s, i) => (
           <button key={s.lawd_cd} onClick={() => setActiveTab(i)} style={{
@@ -60,7 +59,6 @@ export function RegionResultTabs({ stats, budget, dealType }: Props) {
         ))}
       </div>
 
-      {/* 선택 지역 요약 바 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16,
         padding: '12px 16px', background: T.primarySoft, borderRadius: 12 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -75,7 +73,6 @@ export function RegionResultTabs({ stats, budget, dealType }: Props) {
         </span>
       </div>
 
-      {/* 실거래 카드 그리드 */}
       {current.recent_trades.length === 0 ? (
         <div style={{ padding: '24px 0', textAlign: 'center', fontSize: 14, color: T.ink3 }}>
           최근 실거래 데이터가 없어요
