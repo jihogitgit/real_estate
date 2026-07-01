@@ -39,7 +39,8 @@ export function RegionResultTabs({ stats, budget, dealType }: Props) {
     )
   }
 
-  const current = filtered[activeTab] ?? filtered[0]
+  const idx = Math.min(activeTab, Math.max(0, filtered.length - 1))
+  const current = filtered[idx]
   const priceLabel = dealType === 'trade' ? '평균 매매가' : '평균 전세가'
 
   return (
@@ -48,9 +49,9 @@ export function RegionResultTabs({ stats, budget, dealType }: Props) {
         {filtered.map((s, i) => (
           <button key={s.lawd_cd} onClick={() => setActiveTab(i)} style={{
             flexShrink: 0, height: 38, padding: '0 16px', borderRadius: 999,
-            border: i === activeTab ? 'none' : `1.5px solid ${T.line}`,
-            background: i === activeTab ? T.primary : '#fff',
-            color: i === activeTab ? '#fff' : T.ink2,
+            border: i === idx ? 'none' : `1.5px solid ${T.line}`,
+            background: i === idx ? T.primary : '#fff',
+            color: i === idx ? '#fff' : T.ink2,
             fontFamily: T.font, fontSize: 14, fontWeight: 700,
             cursor: 'pointer', transition: 'all .1s',
           }}>

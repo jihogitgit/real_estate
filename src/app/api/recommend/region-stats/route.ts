@@ -23,7 +23,6 @@ type AggRow = { lawd_cd: string; avg_price: number; cnt: number }
 type TradeRow = { lawd_cd: string; apt_nm: string | null; area: number | null; price: number; deal_date: string }
 type RentRow  = { lawd_cd: string; apt_nm: string | null; area: number | null; deposit: number; deal_date: string }
 
-// 6 trades per region × up to 50 regions = 300 outer limit covers all buckets without over-fetching
 function groupByRegion<T extends { lawd_cd: string }>(rows: T[], cds: string[]): Map<string, T[]> {
   const map = new Map<string, T[]>(cds.map(cd => [cd, []]))
   for (const row of rows) {
@@ -49,7 +48,7 @@ const fetchTradeStats = async (): Promise<RegionStat[]> => {
     .in('lawd_cd', cds)
     .gte('deal_date', cut)
     .order('deal_date', { ascending: false })
-    .limit(300)
+    .limit(300) // 6 per region × up to 50 regions; high-volume regions may crowd out smaller ones
   if (tradeErr) throw new Error(tradeErr.message)
 
   const byRegion = groupByRegion(trades as TradeRow[], cds)
@@ -84,7 +83,7 @@ const fetchJeonseStats = async (): Promise<RegionStat[]> => {
     .in('lawd_cd', cds)
     .gte('deal_date', cut)
     .order('deal_date', { ascending: false })
-    .limit(300)
+    .limit(300) // 6 per region × up to 50 regions; high-volume regions may crowd out smaller ones
   if (rentErr) throw new Error(rentErr.message)
 
   const byRegion = groupByRegion(rents as RentRow[], cds)

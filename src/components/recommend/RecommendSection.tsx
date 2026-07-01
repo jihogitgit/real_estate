@@ -33,7 +33,7 @@ export function RecommendSection() {
 
     fetch(`/api/recommend/region-stats?type=${dealType}`, { signal: ctrl.signal })
       .then(r => r.json())
-      .then((data: RegionStat[]) => { setStats(data); setLoading(false) })
+      .then((data: unknown) => { setStats(Array.isArray(data) ? data as RegionStat[] : []); setLoading(false) })
       .catch(err => { if (err.name !== 'AbortError') setLoading(false) })
 
     return () => ctrl.abort()
